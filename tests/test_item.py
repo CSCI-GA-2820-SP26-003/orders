@@ -25,6 +25,8 @@ from unittest import TestCase
 from wsgi import app
 from service.models import Order, Item, db
 from tests.factories import OrderFactory, ItemFactory
+from service.models import DataValidationError
+from unittest.mock import patch
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/postgres"
@@ -138,3 +140,10 @@ class TestItem(TestCase):
         expected_str = f"{item.id}: {item.order_id}, {item.quantity}, {item.unit_price}"
         self.assertEqual(repr(item), expected_repr)
         self.assertEqual(str(item), expected_str)
+
+    @patch("service.models.db.session.commit")
+    def test_update_item_failed(self, exception_mock):
+        """It should not update an Item on database error"""
+        exception_mock.side_effect = Exception()
+        item = ItemFactory()
+        self.assertRaises(DataValidationError, item.update)
