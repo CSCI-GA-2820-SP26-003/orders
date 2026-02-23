@@ -26,7 +26,7 @@ from wsgi import app
 from service.models import Order, Item, db
 from tests.factories import OrderFactory, ItemFactory
 from service.models import DataValidationError
-from unittest.mock import patch
+from unittest.mock import patch, MagicMock
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/postgres"
@@ -153,3 +153,13 @@ class TestItem(TestCase):
         item = Item()
         self.assertRaises(DataValidationError,
                           item.deserialize, "this is a string")
+
+    def test_deserialize_with_type_error(self):
+        """It should not Deserialize an item with a TypeError"""
+        item = Item()
+
+        mock_data = MagicMock()
+        mock_data.get.return_value = "123"
+        mock_data.__getitem__.side_effect = TypeError()
+
+        self.assertRaises(DataValidationError, item.deserialize, mock_data)

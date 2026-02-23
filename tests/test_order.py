@@ -27,6 +27,7 @@ from unittest.mock import patch
 from wsgi import app
 from service.models import Order, Item, DataValidationError, db
 from tests.factories import OrderFactory, ItemFactory
+from unittest.mock import MagicMock
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/postgres"
@@ -181,5 +182,9 @@ class TestOrder(TestCase):
     def test_deserialize_with_attribute_error(self):
         """It should not Deserialize an order with an AttributeError"""
         order = Order()
-        self.assertRaises(DataValidationError,
-                          order.deserialize, "this is a string")
+
+        mock_data = MagicMock()
+        mock_data.__getitem__.return_value = "123"
+        del mock_data.get
+
+        self.assertRaises(DataValidationError, order.deserialize, mock_data)
