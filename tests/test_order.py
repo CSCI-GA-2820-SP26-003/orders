@@ -177,3 +177,9 @@ class TestOrder(TestCase):
         order = OrderFactory()
         expected_repr = f"<Order {order.id} items=[{order.items}]>"
         self.assertEqual(repr(order), expected_repr)
+
+    def test_deserialize_with_attribute_error(self):
+        """It should not Deserialize an order with an AttributeError"""
+        order = Order()
+        self.assertRaises(DataValidationError,
+                          order.deserialize, "this is a string")
