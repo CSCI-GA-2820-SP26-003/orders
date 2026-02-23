@@ -147,3 +147,9 @@ class TestItem(TestCase):
         exception_mock.side_effect = Exception()
         item = ItemFactory()
         self.assertRaises(DataValidationError, item.update)
+
+    def test_deserialize_with_attribute_error(self):
+        """It should not Deserialize an item with an AttributeError"""
+        item = Item()
+        self.assertRaises(DataValidationError,
+                          item.deserialize, "this is a string")
