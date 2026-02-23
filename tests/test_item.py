@@ -130,3 +130,11 @@ class TestItem(TestCase):
         self.assertEqual(new_item.name, item.name)
         self.assertEqual(new_item.quantity, item.quantity)
         self.assertEqual(new_item.unit_price, item.unit_price)
+
+    def test_item_string_and_repr(self):
+        """It should provide proper string representations for an Item"""
+        item = ItemFactory()
+        expected_repr = f"<Item {item.name} id=[{item.id}] Order[{item.order_id}]>"
+        expected_str = f"{item.id}: {item.order_id}, {item.quantity}, {item.unit_price}"
+        self.assertEqual(repr(item), expected_repr)
+        self.assertEqual(str(item), expected_str)

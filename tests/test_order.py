@@ -171,3 +171,9 @@ class TestOrder(TestCase):
         """It should not Deserialize an item with a TypeError"""
         item = Item()
         self.assertRaises(DataValidationError, item.deserialize, [])
+
+    def test_order_repr(self):
+        """It should provide proper string representations for an Order"""
+        order = OrderFactory()
+        expected_repr = f"<Order {order.id} items=[{order.items}]>"
+        self.assertEqual(repr(order), expected_repr)
