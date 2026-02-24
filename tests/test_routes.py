@@ -15,7 +15,7 @@
 ######################################################################
 
 """
-TestYourResourceModel API Service Test Suite
+TestOrder API Service Test Suite
 """
 
 # pylint: disable=duplicate-code
@@ -25,10 +25,12 @@ from unittest import TestCase
 from wsgi import app
 from service.common import status
 from service.models import db, Order, Item
+from tests.factories import OrderFactory
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
 )
+BASE_URL = "/orders"
 
 
 ######################################################################
@@ -72,4 +74,68 @@ class TestYourResourceService(TestCase):
         resp = self.client.get("/")
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
 
-    # Todo: Add your test cases here...
+    ######################################################################
+    #  C R E A T E   O R D E R   T E S T   C A S E S
+    ######################################################################
+
+    def test_create_order(self):
+        """It should Create a new Order"""
+        order = OrderFactory()
+        resp = self.client.post(
+            BASE_URL, json=order.serialize(), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # Make sure location header is set
+        location = resp.headers.get("Location", None)
+        self.assertIsNotNone(location)
+
+        # Check the data is correct
+        new_order = resp.get_json()
+        self.assertEqual(
+            new_order["customer_id"],
+            order.customer_id,
+            "Customer ID does not match",
+        )
+
+        # TODO: Uncomment when get_order route is implemented
+        # # Check that the location header was correct by getting it
+        # resp = self.client.get(location, content_type="application/json")
+        # self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        # new_order = resp.get_json()
+        # self.assertEqual(
+        #     new_order["customer_id"],
+        #     order.customer_id,
+        #     "Customer ID does not match",
+        # )
+
+    def test_create_order_no_data(self):
+        """It should not Create an Order with missing data"""
+        resp = self.client.post(BASE_URL, json={}, content_type="application/json")
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_create_order_no_content_type(self):
+        """It should not Create an Order with no content type"""
+        resp = self.client.post(BASE_URL)
+        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
+    def test_create_order_missing_customer_id(self):
+        """It should not Create an Order without a customer_id"""
+        order = OrderFactory()
+        new_order = order.serialize()
+        del new_order["customer_id"]
+        resp = self.client.post(
+            BASE_URL, json=new_order, content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    # TODO: Uncomment when customer validation is implemented
+    # def test_create_order_customer_not_found(self):
+    #     """It should not Create an Order if the customer does not exist"""
+    #     order = OrderFactory()
+    #     new_order = order.serialize()
+    #     new_order["customer_id"] = 0
+    #     resp = self.client.post(
+    #         BASE_URL, json=new_order, content_type="application/json"
+    #     )
+    #     self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
