@@ -68,11 +68,26 @@ def create_orders():
 
     # Create a message to return
     message = order.serialize()
-    # TODO: Uncomment the next line when get_order() is implemented and can be used to generate the URL for the Location header
-    # location_url = url_for("get_orders", order_id=order.id, _external=True)
-    location_url = "unknown"
+
+    location_url = url_for("get_order", order_id=order.id, _external=True)
 
     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
+
+
+######################################################################
+# READ AN ORDER
+######################################################################
+@app.route("/orders/<int:order_id>", methods=["GET"])
+def get_order(order_id):
+    """
+    Retrieve a single Order
+    This endpoint will return an Order based on its id
+    """
+    app.logger.info("Request to retrieve an Order with id: %s", order_id)
+    order = Order.find(order_id)
+    if not order:
+        abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
+    return jsonify(order.serialize()), status.HTTP_200_OK
 
 
 ######################################################################
