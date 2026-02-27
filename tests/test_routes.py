@@ -259,7 +259,6 @@ class TestYourResourceService(TestCase):
         updated_order = resp.get_json()
         self.assertEqual(updated_order["id"], new_order_id)
 
-
     def test_update_order_not_found_returns_404(self):
         """PUT /orders/<id> should 404 when the order does not exist"""
         payload = {
@@ -268,3 +267,115 @@ class TestYourResourceService(TestCase):
         }
         resp = self.client.put(f"{BASE_URL}/999999", json=payload)
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    ######################################################################
+    #  L I S T   O R D E R   I T E M S   T E S T   C A S E S
+    ######################################################################
+
+    def test_list_order_items(self):
+        """It should GET all Items from an Order"""
+        order = OrderFactory()
+        items = [ItemFactory() for _ in range(3)]
+        order_data = order.serialize()
+        order_data["items"] = [item.serialize() for item in items]
+        resp = self.client.post(
+            BASE_URL, json=order_data, content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        order_id = resp.get_json()["id"]
+
+        resp = self.client.get(
+            f"{BASE_URL}/{order_id}/items",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 3)
+
+    def test_list_order_items_empty(self):
+        """It should return an empty list for an Order with no Items"""
+        order = OrderFactory()
+        order_data = order.serialize()
+        resp = self.client.post(
+            BASE_URL, json=order_data, content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        order_id = resp.get_json()["id"]
+
+        resp = self.client.get(
+            f"{BASE_URL}/{order_id}/items",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertIsInstance(data, list)
+        self.assertEqual(len(data), 0)
+
+    def test_list_order_items_order_not_found(self):
+        """It should not list Items for a non-existing Order"""
+        resp = self.client.get(f"{BASE_URL}/0/items", content_type="application/json")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_list_order_items_invalid_order_id(self):
+        """It should return 400 for an invalid order_id"""
+        resp = self.client.get(f"{BASE_URL}/abc/items", content_type="application/json")
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_list_order_items_contains_correct_data(self):
+        """It should return Items with correct fields"""
+        order = OrderFactory()
+        item = ItemFactory()
+        order_data = order.serialize()
+        order_data["items"] = [item.serialize()]
+        resp = self.client.post(
+            BASE_URL, json=order_data, content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        order_id = resp.get_json()["id"]
+
+        resp = self.client.get(
+            f"{BASE_URL}/{order_id}/items",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 1)
+        self.assertIn("id", data[0])
+        self.assertIn("name", data[0])
+        self.assertIn("quantity", data[0])
+        self.assertIn("unit_price", data[0])
+        self.assertIn("order_id", data[0])
+        self.assertEqual(data[0]["order_id"], order_id)
+
+    def test_list_order_items_only_returns_items_for_that_order(self):
+        """It should only return Items belonging to the specified Order"""
+        # Create two orders each with one item
+        order1 = OrderFactory()
+        item1 = ItemFactory()
+        order1_data = order1.serialize()
+        order1_data["items"] = [item1.serialize()]
+        resp = self.client.post(
+            BASE_URL, json=order1_data, content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        order1_id = resp.get_json()["id"]
+
+        order2 = OrderFactory()
+        item2 = ItemFactory()
+        order2_data = order2.serialize()
+        order2_data["items"] = [item2.serialize()]
+        resp = self.client.post(
+            BASE_URL, json=order2_data, content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        # List items for order1 only
+        resp = self.client.get(
+            f"{BASE_URL}/{order1_id}/items",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 1)
+        for item in data:
+            self.assertEqual(item["order_id"], order1_id)
