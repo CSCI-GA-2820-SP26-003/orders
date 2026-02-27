@@ -26,6 +26,7 @@ from wsgi import app
 from service.common import status
 from service.models import db, Order, Item
 from tests.factories import OrderFactory
+from tests.factories import ItemFactory
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
@@ -185,6 +186,61 @@ class TestYourResourceService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     ######################################################################
+    #  R E A D   O R D E R   I T E M   T E S T   C A S E S
+    ######################################################################
+
+    def test_get_order_item(self):
+        """It should GET an Item from an Order"""
+        order = OrderFactory()
+        item = ItemFactory()
+        order_data = order.serialize()
+        order_data["items"] = [item.serialize()]
+        resp = self.client.post(
+            BASE_URL, json=order_data, content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        new_order = resp.get_json()
+        order_id = new_order["id"]
+        item_id = new_order["items"][0]["id"]
+
+        resp = self.client.get(
+            f"{BASE_URL}/{order_id}/items/{item_id}",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(data["id"], item_id)
+        self.assertEqual(data["order_id"], order_id)
+
+    def test_get_order_item_order_not_found(self):
+        """It should not GET an Item from a non-existing Order"""
+        resp = self.client.get(f"{BASE_URL}/0/items/1", content_type="application/json")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_order_item_not_found(self):
+        """It should not GET a non-existing Item from an Order"""
+        order = self._create_orders(1)[0]
+        resp = self.client.get(
+            f"{BASE_URL}/{order.id}/items/0",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_get_order_item_invalid_order_id(self):
+        """It should return 400 for an invalid order_id"""
+        resp = self.client.get(
+            f"{BASE_URL}/abc/items/1", content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_get_order_item_invalid_item_id(self):
+        """It should return 400 for an invalid item_id"""
+        resp = self.client.get(
+            f"{BASE_URL}/1/items/abc", content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    ######################################################################
     #  U P D A T E   O R D E R   T E S T   C A S E S
     ######################################################################
 
@@ -208,8 +264,6 @@ class TestYourResourceService(TestCase):
         """PUT /orders/<id> should 404 when the order does not exist"""
         payload = {
             "customer_id": 1,
-            "status": "PENDING",
-            "total_price": 0.0,
             "items": [],
         }
         resp = self.client.put(f"{BASE_URL}/999999", json=payload)

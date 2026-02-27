@@ -91,6 +91,42 @@ def get_order(order_id):
 
 
 ######################################################################
+# READ AN ITEM FROM AN ORDER
+######################################################################
+@app.route("/orders/<order_id>/items/<item_id>", methods=["GET"])
+def get_order_item(order_id, item_id):
+    """
+    Retrieve an Item from an Order
+    This endpoint will return an Item based on its id within an Order
+    """
+    app.logger.info("Request to retrieve Item %s from Order %s", item_id, order_id)
+    try:
+        order_id = int(order_id)
+        item_id = int(item_id)
+    except ValueError:
+        abort(
+            status.HTTP_400_BAD_REQUEST,
+            "Invalid ID: order_id and item_id must be integers.",
+        )
+
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with id '{order_id}' was not found.",
+        )
+
+    item = Item.find(item_id)
+    if not item or item.order_id != order.id:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Item with id '{item_id}' was not found in Order '{order_id}'.",
+        )
+
+    return jsonify(item.serialize()), status.HTTP_200_OK
+
+
+######################################################################
 # UPDATE AN EXISTING ORDER
 ######################################################################
 @app.route("/orders/<int:order_id>", methods=["PUT"])
