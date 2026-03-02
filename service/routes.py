@@ -86,8 +86,29 @@ def get_order(order_id):
     app.logger.info("Request to retrieve an Order with id: %s", order_id)
     order = Order.find(order_id)
     if not order:
-        abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
+        abort(status.HTTP_404_NOT_FOUND,
+              f"Order with id '{order_id}' was not found.")
     return jsonify(order.serialize()), status.HTTP_200_OK
+
+
+######################################################################
+# DELETE AN ORDER
+######################################################################
+@app.route("/orders/<int:order_id>", methods=["DELETE"])
+def delete_orders(order_id):
+    """
+    Delete an Order
+
+    This endpoint will delete an Order based the id specified in the path
+    """
+    app.logger.info("Request to delete order with id: %s", order_id)
+
+    # Retrieve the order to delete and delete it if it exists
+    order = Order.find(order_id)
+    if order:
+        order.delete()
+
+    return "", status.HTTP_204_NO_CONTENT
 
 
 ######################################################################
@@ -99,7 +120,8 @@ def get_order_item(order_id, item_id):
     Retrieve an Item from an Order
     This endpoint will return an Item based on its id within an Order
     """
-    app.logger.info("Request to retrieve Item %s from Order %s", item_id, order_id)
+    app.logger.info("Request to retrieve Item %s from Order %s",
+                    item_id, order_id)
     try:
         order_id = int(order_id)
         item_id = int(item_id)
@@ -142,7 +164,8 @@ def update_orders(order_id):
     # See if the order exists and abort if it doesn't
     order = Order.find(order_id)
     if not order:
-        abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
+        abort(status.HTTP_404_NOT_FOUND,
+              f"Order with id '{order_id}' was not found.")
 
     # Update from the json in the body of the request
     order.deserialize(request.get_json())
@@ -169,7 +192,8 @@ def check_content_type(content_type):
     if request.headers["Content-Type"] == content_type:
         return
 
-    app.logger.error("Invalid Content-Type: %s", request.headers["Content-Type"])
+    app.logger.error("Invalid Content-Type: %s",
+                     request.headers["Content-Type"])
     abort(
         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, f"Content-Type must be {content_type}"
     )
