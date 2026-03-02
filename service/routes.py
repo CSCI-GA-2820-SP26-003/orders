@@ -153,6 +153,35 @@ def update_orders(order_id):
 
 
 ######################################################################
+# LIST ALL ITEMS IN AN ORDER
+######################################################################
+@app.route("/orders/<order_id>/items", methods=["GET"])
+def list_order_items(order_id):
+    """
+    List all Items in an Order
+    This endpoint will return all Items for a given Order
+    """
+    app.logger.info("Request to list Items for Order %s", order_id)
+    try:
+        order_id = int(order_id)
+    except ValueError:
+        abort(
+            status.HTTP_400_BAD_REQUEST,
+            "Invalid ID: order_id must be an integer.",
+        )
+
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with id '{order_id}' was not found.",
+        )
+
+    items = [item.serialize() for item in order.items]
+    return jsonify(items), status.HTTP_200_OK
+
+
+######################################################################
 #  U T I L I T Y   F U N C T I O N S
 ######################################################################
 
