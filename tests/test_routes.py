@@ -268,3 +268,135 @@ class TestYourResourceService(TestCase):
         }
         resp = self.client.put(f"{BASE_URL}/999999", json=payload)
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    ######################################################################
+    #  A D D   O R D E R   I T E M   T E S T   C A S E S
+    ######################################################################
+    
+    def test_add_order_item(self):
+        """It should ADD an Item to an Order"""
+        order = OrderFactory()
+        order_data = order.serialize()
+        order_data["items"] = []
+
+        resp = self.client.post(
+            BASE_URL, json=order_data, content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        new_order = resp.get_json()
+        order_id = new_order["id"]
+
+        item = ItemFactory()
+        item_data = item.serialize()
+
+        item_data["name"] = "xxx"
+        item_data["quantity"] = 2
+        item_data["unit_price"] = 0
+
+        # POST /orders/{order_id}/items
+        resp = self.client.post(
+            f"{BASE_URL}/{order_id}/items",
+            json={"name": item_data["name"], "quantity": item_data["quantity"]},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        data = resp.get_json()
+
+        self.assertIn("name", data)
+        self.assertEqual(data["order_id"], order_id)
+        self.assertEqual(data["name"], item_data["name"])
+        self.assertEqual(data["quantity"], item_data["quantity"])
+
+
+    def test_add_order_item_existing_product_updates_quantity(self):
+        """It should UPDATE quantity when adding the same name again"""
+        order = OrderFactory()
+        item = ItemFactory()
+        order_data = order.serialize()
+
+        name = "widget-2002"
+        first_qty = 2
+        item_data = item.serialize()
+        item_data["name"] = name
+        item_data["quantity"] = first_qty
+
+        order_data["items"] = [item_data]
+        resp = self.client.post(
+            BASE_URL, json=order_data, content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        new_order = resp.get_json()
+        order_id = new_order["id"]
+
+        add_qty = 3
+        resp = self.client.post(
+            f"{BASE_URL}/{order_id}/items",
+            json={"name": name, "quantity": add_qty},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        updated = resp.get_json()
+
+        self.assertEqual(updated["order_id"], order_id)
+        self.assertEqual(updated["name"], name)
+        self.assertEqual(updated["quantity"], first_qty + add_qty)
+
+        resp = self.client.get(f"{BASE_URL}/{order_id}", content_type="application/json")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        order_json = resp.get_json()
+        same_product_items = [
+            it for it in order_json.get("items", []) if it.get("name") == name
+        ]
+        self.assertEqual(len(same_product_items), 1)
+
+
+    def test_add_order_item_order_not_found(self):
+        """It should not ADD an Item to a non-existing Order"""
+        resp = self.client.post(
+            f"{BASE_URL}/0/items",
+            json={"name": "poultry", "quantity": 2},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+
+    def test_add_order_item_missing_name(self):
+        """It should return 400 for missing name"""
+        order = self._create_orders(1)[0]
+        resp = self.client.post(
+            f"{BASE_URL}/{order.id}/items",
+            json={"quantity": 2},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+    def test_add_order_item_invalid_quantity(self):
+        """It should return 400 for invalid quantity"""
+        order = self._create_orders(1)[0]
+
+        # quantity <= 0
+        resp = self.client.post(
+            f"{BASE_URL}/{order.id}/items",
+            json={"name": "poultry", "quantity": 0},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+        # quantity not an integer
+        resp = self.client.post(
+            f"{BASE_URL}/{order.id}/items",
+            json={"name": "poultry", "quantity": "abc"},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+    def test_add_order_item_invalid_order_id(self):
+        """It should return 400 for an invalid order_id"""
+        resp = self.client.post(
+            f"{BASE_URL}/abc/items",
+            json={"name": "poultry", "quantity": 2},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)

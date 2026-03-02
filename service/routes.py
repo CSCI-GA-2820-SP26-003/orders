@@ -151,6 +151,69 @@ def update_orders(order_id):
 
     return jsonify(order.serialize()), status.HTTP_200_OK
 
+######################################################################
+# ADD AN ITEM TO AN ORDER
+######################################################################
+
+@app.route("/orders/<order_id>/items", methods=["POST"])
+def add_order_item(order_id):
+    """
+    Add an Item to an Order
+    If the same id already exists in the order, update quantity.
+    """
+    app.logger.info("Request to add Item to Order %s", order_id)
+    check_content_type("application/json")
+
+    try:
+        order_id = int(order_id)
+    except ValueError:
+        abort(status.HTTP_400_BAD_REQUEST, "Invalid ID: order_id must be an integer.")
+
+    order = Order.find(order_id)
+    if not order:
+        abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
+    
+    data = request.get_json(silent=True)
+    if not data:
+        abort(status.HTTP_400_BAD_REQUEST, "Request body must be JSON.")
+
+    if "name" not in data or "quantity" not in data:
+        abort(
+            status.HTTP_400_BAD_REQUEST,
+            "Missing required fields: id and quantity are required.",
+        )
+    
+    name = data.get("name")
+    if not isinstance(name, str) or not name.strip():
+        abort(status.HTTP_400_BAD_REQUEST, "name must be a non-empty string.")
+    name = name.strip()
+
+    try:
+        quantity = int(data["quantity"])
+    except (ValueError, TypeError):
+        abort(status.HTTP_400_BAD_REQUEST, "quantity must be an integer.")
+
+        
+
+    if quantity <= 0:
+        abort(status.HTTP_400_BAD_REQUEST, "quantity must be a positive integer.")
+
+
+    existing = None
+    for it in order.items:
+        if getattr(it, "name", None) == name:
+            existing = it
+            break
+
+    if existing:
+        existing.quantity += quantity
+        existing.update() 
+        return jsonify(existing.serialize()), status.HTTP_201_CREATED
+
+    item = Item(order_id=order.id, name=name, quantity=quantity)
+    item.create()
+    return jsonify(item.serialize()), status.HTTP_201_CREATED
+
 
 ######################################################################
 #  U T I L I T Y   F U N C T I O N S
