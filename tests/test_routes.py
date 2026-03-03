@@ -133,13 +133,15 @@ class TestYourResourceService(TestCase):
 
     def test_create_order_no_data(self):
         """It should not Create an Order with missing data"""
-        resp = self.client.post(BASE_URL, json={}, content_type="application/json")
+        resp = self.client.post(
+            BASE_URL, json={}, content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_order_no_content_type(self):
         """It should not Create an Order with no content type"""
         resp = self.client.post(BASE_URL)
-        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+        self.assertEqual(resp.status_code,
+                         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
     def test_create_order_missing_customer_id(self):
         """It should not Create an Order without a customer_id"""
@@ -182,7 +184,8 @@ class TestYourResourceService(TestCase):
 
     def test_get_order_not_found(self):
         """It should not GET an Order that is not found"""
-        resp = self.client.get(f"{BASE_URL}/0", content_type="application/json")
+        resp = self.client.get(
+            f"{BASE_URL}/0", content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     ######################################################################
@@ -214,7 +217,8 @@ class TestYourResourceService(TestCase):
 
     def test_get_order_item_order_not_found(self):
         """It should not GET an Item from a non-existing Order"""
-        resp = self.client.get(f"{BASE_URL}/0/items/1", content_type="application/json")
+        resp = self.client.get(f"{BASE_URL}/0/items/1",
+                               content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_get_order_item_not_found(self):
@@ -268,6 +272,14 @@ class TestYourResourceService(TestCase):
         resp = self.client.put(f"{BASE_URL}/999999", json=payload)
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
+    def test_delete_order(self):
+        """It should Delete an Order"""
+        # get the id of an order
+        order = self._create_orders(1)[0]
+        resp = self.client.delete(f"{BASE_URL}/{order.id}")
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+        resp = self.client.get(f"{BASE_URL}/{order.id}")
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
     ######################################################################
     #  L I S T   O R D E R   I T E M S   T E S T   C A S E S
     ######################################################################
@@ -313,12 +325,14 @@ class TestYourResourceService(TestCase):
 
     def test_list_order_items_order_not_found(self):
         """It should not list Items for a non-existing Order"""
-        resp = self.client.get(f"{BASE_URL}/0/items", content_type="application/json")
+        resp = self.client.get(f"{BASE_URL}/0/items",
+                               content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_list_order_items_invalid_order_id(self):
         """It should return 400 for an invalid order_id"""
-        resp = self.client.get(f"{BASE_URL}/abc/items", content_type="application/json")
+        resp = self.client.get(f"{BASE_URL}/abc/items",
+                               content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_list_order_items_contains_correct_data(self):
