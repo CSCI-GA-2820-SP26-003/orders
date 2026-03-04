@@ -28,16 +28,34 @@ from service.common import status  # HTTP Status Codes
 
 
 ######################################################################
+# GET HEALTH CHECK
+######################################################################
+@app.route("/health")
+def health_check():
+    """Let them know our heart is still beating"""
+    return jsonify(status=200, message="Healthy"), status.HTTP_200_OK
+
+
+######################################################################
 # GET INDEX
 ######################################################################
 @app.route("/")
 def index():
-    """Root URL response"""
+    """Root URL response for Orders service"""
+    app.logger.info("Request for the root URL")
     return (
-        "Reminder: return some useful information in json format about the service here",
+        jsonify(
+            name="Orders REST API Service",
+            version="1.0.0",
+            paths=url_for("orders", _external=True),
+        ),
         status.HTTP_200_OK,
     )
 
+@app.route("/orders", methods=["GET"])
+def orders():
+    """Returns a list of orders"""
+    return jsonify([]), status.HTTP_200_OK
 
 ######################################################################
 #  R E S T   A P I   E N D P O I N T S
@@ -99,9 +117,257 @@ def get_order(order_id):
     app.logger.info("Request to retrieve an Order with id: %s", order_id)
     order = Order.find(order_id)
     if not order:
-        abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
+        abort(status.HTTP_404_NOT_FOUND,
+              f"Order with id '{order_id}' was not found.")
     return jsonify(order.serialize()), status.HTTP_200_OK
 
+
+######################################################################
+# DELETE AN ORDER
+######################################################################
+@app.route("/orders/<int:order_id>", methods=["DELETE"])
+def delete_orders(order_id):
+    """
+    Delete an Order
+
+    This endpoint will delete an Order based the id specified in the path
+    """
+    app.logger.info("Request to delete order with id: %s", order_id)
+
+    # Retrieve the order to delete and delete it if it exists
+    order = Order.find(order_id)
+    if order:
+        order.delete()
+
+    return "", status.HTTP_204_NO_CONTENT
+
+
+######################################################################
+# READ AN ITEM FROM AN ORDER
+######################################################################
+@app.route("/orders/<order_id>/items/<item_id>", methods=["GET"])
+def get_order_item(order_id, item_id):
+    """
+    Retrieve an Item from an Order
+    This endpoint will return an Item based on its id within an Order
+    """
+    app.logger.info("Request to retrieve Item %s from Order %s",
+                    item_id, order_id)
+    try:
+        order_id = int(order_id)
+        item_id = int(item_id)
+    except ValueError:
+        abort(
+            status.HTTP_400_BAD_REQUEST,
+            "Invalid ID: order_id and item_id must be integers.",
+        )
+
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with id '{order_id}' was not found.",
+        )
+
+    item = Item.find(item_id)
+    if not item or item.order_id != order.id:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Item with id '{item_id}' was not found in Order '{order_id}'.",
+        )
+
+    return jsonify(item.serialize()), status.HTTP_200_OK
+
+
+######################################################################
+# UPDATE AN EXISTING ORDER
+######################################################################
+@app.route("/orders/<int:order_id>", methods=["PUT"])
+def update_orders(order_id):
+    """
+    Update an Order
+
+    This endpoint will update an Order based the body that is posted
+    """
+    app.logger.info("Request to update order with id: %s", order_id)
+    check_content_type("application/json")
+
+    # See if the order exists and abort if it doesn't
+    order = Order.find(order_id)
+    if not order:
+        abort(status.HTTP_404_NOT_FOUND,
+              f"Order with id '{order_id}' was not found.")
+
+    # Update from the json in the body of the request
+    order.deserialize(request.get_json())
+    order.id = order_id
+    order.update()
+
+    return jsonify(order.serialize()), status.HTTP_200_OK
+
+######################################################################
+# ADD AN ITEM TO AN ORDER
+######################################################################
+
+@app.route("/orders/<order_id>/items", methods=["POST"])
+def add_order_item(order_id):
+    """
+    Add an Item to an Order
+    If the same id already exists in the order, update quantity.
+    This endpoint will add Item based the body that is posted
+    """
+    app.logger.info("Request to add Item to Order %s", order_id)
+    check_content_type("application/json")
+
+    try:
+        order_id = int(order_id)
+    except ValueError:
+        abort(status.HTTP_400_BAD_REQUEST, "Invalid ID: order_id must be an integer.")
+
+    order = Order.find(order_id)
+    if not order:
+        abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
+    
+    data = request.get_json(silent=True)
+    if not data:
+        abort(status.HTTP_400_BAD_REQUEST, "Request body must be JSON.")
+
+    if "name" not in data or "quantity" not in data:
+        abort(
+            status.HTTP_400_BAD_REQUEST,
+            "Missing required fields: id and quantity are required.",
+        )
+    
+    name = data.get("name")
+    if not isinstance(name, str) or not name.strip():
+        abort(status.HTTP_400_BAD_REQUEST, "name must be a non-empty string.")
+    name = name.strip()
+
+    try:
+        quantity = int(data["quantity"])
+    except (ValueError, TypeError):
+        abort(status.HTTP_400_BAD_REQUEST, "quantity must be an integer.")
+
+        
+
+    if quantity <= 0:
+        abort(status.HTTP_400_BAD_REQUEST, "quantity must be a positive integer.")
+
+
+    existing = None
+    for it in order.items:
+        if getattr(it, "name", None) == name:
+            existing = it
+            break
+
+    if existing:
+        existing.quantity += quantity
+        existing.update() 
+        return jsonify(existing.serialize()), status.HTTP_201_CREATED
+
+    item = Item(order_id=order.id, name=name, quantity=quantity)
+    item.create()
+    return jsonify(item.serialize()), status.HTTP_201_CREATED
+
+
+######################################################################
+# LIST ALL ITEMS IN AN ORDER
+######################################################################
+@app.route("/orders/<order_id>/items", methods=["GET"])
+def list_order_items(order_id):
+    """
+    List all Items in an Order
+    This endpoint will return all Items for a given Order
+    """
+    app.logger.info("Request to list Items for Order %s", order_id)
+    try:
+        order_id = int(order_id)
+    except ValueError:
+        abort(
+            status.HTTP_400_BAD_REQUEST,
+            "Invalid ID: order_id must be an integer.",
+        )
+
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with id '{order_id}' was not found.",
+        )
+
+    items = [item.serialize() for item in order.items]
+    return jsonify(items), status.HTTP_200_OK
+
+
+######################################################################
+# UPDATE AN ITEM
+######################################################################
+@app.route("/orders/<int:order_id>/items/<int:item_id>", methods=["PUT"])
+def update_items(order_id, item_id):
+    """
+    Update an Item in an Order
+
+    This endpoint will update an Item based the body that is posted
+    """
+    app.logger.info("Updating Item %s for Order id: %s", (item_id, order_id))
+    check_content_type("application/json")
+
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' could not be found."
+        )
+
+    item = Item.find(item_id)
+    if not item or item.order_id != order_id:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Item with id '{item_id}' in Order '{order_id}' could not be found.",
+        )
+    
+    # Update from the json in the body of the request
+    item.deserialize(request.get_json())
+    item.id = item_id
+    item.order_id = order_id
+    item.update()
+
+    return jsonify(item.serialize()), status.HTTP_200_OK
+
+
+######################################################################
+# DELETE AN ITEM FROM AN ORDER
+######################################################################
+@app.route("/orders/<order_id>/items/<item_id>", methods=["DELETE"])
+def delete_item(order_id, item_id):
+    """
+    Delete an Item in an Order
+    """
+    app.logger.info("Request to delete Item %s from Order %s", item_id, order_id)
+
+    try:
+        order_id = int(order_id)
+        item_id = int(item_id)
+        if order_id <= 0 or item_id <= 0:
+            raise ValueError
+    except ValueError:
+        abort(status.HTTP_400_BAD_REQUEST, "Invalid ID: item_id, order_id must be positive integer.")
+
+
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' could not be found."
+        )
+
+    item = Item.find(item_id)
+    if not item or item.order_id != order_id:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Item with id '{item_id}' in Order '{order_id}' could not be found.",
+        )
+
+    item.delete()
+    return "", status.HTTP_204_NO_CONTENT
 
 ######################################################################
 #  U T I L I T Y   F U N C T I O N S
@@ -120,7 +386,8 @@ def check_content_type(content_type):
     if request.headers["Content-Type"] == content_type:
         return
 
-    app.logger.error("Invalid Content-Type: %s", request.headers["Content-Type"])
+    app.logger.error("Invalid Content-Type: %s",
+                     request.headers["Content-Type"])
     abort(
         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, f"Content-Type must be {content_type}"
     )
