@@ -52,6 +52,10 @@ def index():
         status.HTTP_200_OK,
     )
 
+@app.route("/orders", methods=["GET"])
+def orders():
+    """Returns a list of orders"""
+    return jsonify([]), status.HTTP_200_OK
 
 ######################################################################
 #  R E S T   A P I   E N D P O I N T S
