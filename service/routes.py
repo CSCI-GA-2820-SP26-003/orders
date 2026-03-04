@@ -76,7 +76,7 @@ def create_orders():
     app.logger.info("Request to create an Order")
     check_content_type("application/json")
 
-    # TODO: Check if customer exists before creating the order
+    # We will need to check if customer exists before creating the order
     # customer = Customer.find(customer_id)
     # if not customer:
     #     abort(status.HTTP_404_NOT_FOUND, f"Customer with id '{customer_id}' was not found.")
@@ -97,6 +97,8 @@ def create_orders():
 ######################################################################
 # LIST ALL ORDERS
 ######################################################################
+
+
 @app.route("/orders", methods=["GET"])
 def list_orders():
     """
@@ -112,6 +114,8 @@ def list_orders():
 ######################################################################
 # READ AN ORDER
 ######################################################################
+
+
 @app.route("/orders/<int:order_id>", methods=["GET"])
 def get_order(order_id):
     """
@@ -121,7 +125,8 @@ def get_order(order_id):
     app.logger.info("Request to retrieve an Order with id: %s", order_id)
     order = Order.find(order_id)
     if not order:
-        abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
+        abort(status.HTTP_404_NOT_FOUND,
+              f"Order with id '{order_id}' was not found.")
     return jsonify(order.serialize()), status.HTTP_200_OK
 
 
@@ -154,7 +159,8 @@ def get_order_item(order_id, item_id):
     Retrieve an Item from an Order
     This endpoint will return an Item based on its id within an Order
     """
-    app.logger.info("Request to retrieve Item %s from Order %s", item_id, order_id)
+    app.logger.info("Request to retrieve Item %s from Order %s",
+                    item_id, order_id)
     try:
         order_id = int(order_id)
         item_id = int(item_id)
@@ -197,7 +203,8 @@ def update_orders(order_id):
     # See if the order exists and abort if it doesn't
     order = Order.find(order_id)
     if not order:
-        abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
+        abort(status.HTTP_404_NOT_FOUND,
+              f"Order with id '{order_id}' was not found.")
 
     # Update from the json in the body of the request
     order.deserialize(request.get_json())
@@ -210,6 +217,30 @@ def update_orders(order_id):
 ######################################################################
 # ADD AN ITEM TO AN ORDER
 ######################################################################
+
+
+def validate_order(data, name, quantity):
+    """Helper function to validate order data"""
+    if not data:
+        abort(status.HTTP_400_BAD_REQUEST, "Request body must be JSON.")
+
+    if "name" not in data or "quantity" not in data:
+        abort(
+            status.HTTP_400_BAD_REQUEST,
+            "Missing required fields: id and quantity are required.",
+        )
+
+    if not isinstance(name, str) or not name.strip():
+        abort(status.HTTP_400_BAD_REQUEST, "name must be a non-empty string.")
+    name = name.strip()
+    try:
+        quantity = int(quantity)
+    except (ValueError, TypeError):
+        abort(status.HTTP_400_BAD_REQUEST, "quantity must be an integer.")
+
+    if quantity <= 0:
+        abort(status.HTTP_400_BAD_REQUEST,
+              "quantity must be a positive integer.")
 
 
 @app.route("/orders/<order_id>/items", methods=["POST"])
@@ -225,35 +256,18 @@ def add_order_item(order_id):
     try:
         order_id = int(order_id)
     except ValueError:
-        abort(status.HTTP_400_BAD_REQUEST, "Invalid ID: order_id must be an integer.")
+        abort(status.HTTP_400_BAD_REQUEST,
+              "Invalid ID: order_id must be an integer.")
 
     order = Order.find(order_id)
     if not order:
-        abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
+        abort(status.HTTP_404_NOT_FOUND,
+              f"Order with id '{order_id}' was not found.")
 
     data = request.get_json(silent=True)
-    if not data:
-        abort(status.HTTP_400_BAD_REQUEST, "Request body must be JSON.")
-
-    if "name" not in data or "quantity" not in data:
-        abort(
-            status.HTTP_400_BAD_REQUEST,
-            "Missing required fields: id and quantity are required.",
-        )
-
     name = data.get("name")
-    if not isinstance(name, str) or not name.strip():
-        abort(status.HTTP_400_BAD_REQUEST, "name must be a non-empty string.")
-    name = name.strip()
-
-    try:
-        quantity = int(data["quantity"])
-    except (ValueError, TypeError):
-        abort(status.HTTP_400_BAD_REQUEST, "quantity must be an integer.")
-
-    if quantity <= 0:
-        abort(status.HTTP_400_BAD_REQUEST, "quantity must be a positive integer.")
-
+    quantity = data.get("quantity")
+    validate_order(data, name, quantity)
     existing = None
     for it in order.items:
         if getattr(it, "name", None) == name:
@@ -264,8 +278,10 @@ def add_order_item(order_id):
         existing.quantity += quantity
         existing.update()
         return jsonify(existing.serialize()), status.HTTP_201_CREATED
-
-    item = Item(order_id=order.id, name=name, quantity=quantity)
+    item = Item()
+    item.order_id = order.id
+    item.name = name
+    item.quantity = quantity
     item.create()
     return jsonify(item.serialize()), status.HTTP_201_CREATED
 
@@ -342,7 +358,8 @@ def delete_item(order_id, item_id):
     """
     Delete an Item in an Order
     """
-    app.logger.info("Request to delete Item %s from Order %s", item_id, order_id)
+    app.logger.info("Request to delete Item %s from Order %s",
+                    item_id, order_id)
 
     try:
         order_id = int(order_id)
@@ -350,10 +367,8 @@ def delete_item(order_id, item_id):
         if order_id <= 0 or item_id <= 0:
             raise ValueError
     except ValueError:
-        abort(
-            status.HTTP_400_BAD_REQUEST,
-            "Invalid ID: item_id, order_id must be positive integer.",
-        )
+        abort(status.HTTP_400_BAD_REQUEST,
+              "Invalid ID: item_id, order_id must be positive integer.")
 
     order = Order.find(order_id)
     if not order:
@@ -389,7 +404,8 @@ def check_content_type(content_type):
     if request.headers["Content-Type"] == content_type:
         return
 
-    app.logger.error("Invalid Content-Type: %s", request.headers["Content-Type"])
+    app.logger.error("Invalid Content-Type: %s",
+                     request.headers["Content-Type"])
     abort(
         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, f"Content-Type must be {content_type}"
     )
