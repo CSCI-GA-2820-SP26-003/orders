@@ -77,7 +77,7 @@ class Item(db.Model, PersistentBase):
             self.unit_price = data["unit_price"]
         except AttributeError as error:
             raise DataValidationError(
-                "Invalid attribute: " + error.args[0]) from error
+                "Invalid Item attribute: " + error.args[0]) from error
         except KeyError as error:
             raise DataValidationError(
                 "Invalid Item: missing " + error.args[0]

@@ -19,14 +19,14 @@
 Test cases for Item Model
 """
 
+from unittest.mock import patch, MagicMock
+from unittest import TestCase
 import logging
 import os
-from unittest import TestCase
 from wsgi import app
-from service.models import Order, Item, db
 from tests.factories import OrderFactory, ItemFactory
 from service.models import DataValidationError
-from unittest.mock import patch, MagicMock
+from service.models import Order, Item, db
 
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/postgres"

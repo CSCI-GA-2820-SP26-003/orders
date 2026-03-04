@@ -24,12 +24,13 @@ import logging
 from unittest import TestCase
 from wsgi import app
 from service.common import status
-from service.models import db, Order, Item
+from service.models import db, Order
 from tests.factories import OrderFactory
 from tests.factories import ItemFactory
 
 DATABASE_URI = os.getenv(
-    "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
+    "DATABASE_URI",
+    "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
 )
 BASE_URL = "/orders"
 
@@ -85,7 +86,8 @@ class TestYourResourceService(TestCase):
         for _ in range(count):
             order = OrderFactory()
             resp = self.client.post(
-                BASE_URL, json=order.serialize(), content_type="application/json"
+                BASE_URL, json=order.serialize(),
+                content_type="application/json"
             )
             self.assertEqual(
                 resp.status_code,
@@ -153,7 +155,7 @@ class TestYourResourceService(TestCase):
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
-    # TODO: Uncomment when customer validation is implemented
+    # We will need to uncomment when customer validation is implemented
     # def test_create_order_customer_not_found(self):
     #     """It should not Create an Order if the customer does not exist"""
     #     order = OrderFactory()
@@ -594,8 +596,6 @@ class TestYourResourceService(TestCase):
 
     def test_update_item_order_not_found(self):
         """It should return 404 when updating items in a non-existent order"""
-        # Create a known order
-        order = self._create_orders(1)[0]
 
         # Create update data
         item = ItemFactory()
@@ -681,7 +681,8 @@ class TestYourResourceService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_delete_order_item_order_not_found(self):
-        """It should return 404 when deleting an Item from a non-existing Order"""
+        """It should return 404 when deleting an Item
+        from a non-existing Order"""
         resp = self.client.delete(
             f"{BASE_URL}/999999/items/1",
             content_type="application/json",
@@ -689,7 +690,8 @@ class TestYourResourceService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_delete_order_item_not_found_in_order(self):
-        """It should return 404 when the Item does not exist within the specified Order"""
+        """It should return 404 when the Item does not exist
+        within the specified Order"""
         # Create an order with one item
         order = OrderFactory()
         item = ItemFactory()

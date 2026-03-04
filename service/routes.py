@@ -70,7 +70,7 @@ def create_orders():
     app.logger.info("Request to create an Order")
     check_content_type("application/json")
 
-    # TODO: Check if customer exists before creating the order
+    # We will need to check if customer exists before creating the order
     # customer = Customer.find(customer_id)
     # if not customer:
     #     abort(status.HTTP_404_NOT_FOUND, f"Customer with id '{customer_id}' was not found.")
@@ -210,6 +210,30 @@ def update_orders(order_id):
 ######################################################################
 
 
+def validate_order(data, name, quantity):
+    """Helper function to validate order data"""
+    if not data:
+        abort(status.HTTP_400_BAD_REQUEST, "Request body must be JSON.")
+
+    if "name" not in data or "quantity" not in data:
+        abort(
+            status.HTTP_400_BAD_REQUEST,
+            "Missing required fields: id and quantity are required.",
+        )
+
+    if not isinstance(name, str) or not name.strip():
+        abort(status.HTTP_400_BAD_REQUEST, "name must be a non-empty string.")
+    name = name.strip()
+    try:
+        quantity = int(quantity)
+    except (ValueError, TypeError):
+        abort(status.HTTP_400_BAD_REQUEST, "quantity must be an integer.")
+
+    if quantity <= 0:
+        abort(status.HTTP_400_BAD_REQUEST,
+              "quantity must be a positive integer.")
+
+
 @app.route("/orders/<order_id>/items", methods=["POST"])
 def add_order_item(order_id):
     """
@@ -232,28 +256,9 @@ def add_order_item(order_id):
               f"Order with id '{order_id}' was not found.")
 
     data = request.get_json(silent=True)
-    if not data:
-        abort(status.HTTP_400_BAD_REQUEST, "Request body must be JSON.")
-
-    if "name" not in data or "quantity" not in data:
-        abort(
-            status.HTTP_400_BAD_REQUEST,
-            "Missing required fields: id and quantity are required.",
-        )
-
     name = data.get("name")
-    if not isinstance(name, str) or not name.strip():
-        abort(status.HTTP_400_BAD_REQUEST, "name must be a non-empty string.")
-    name = name.strip()
-
-    try:
-        quantity = int(data["quantity"])
-    except (ValueError, TypeError):
-        abort(status.HTTP_400_BAD_REQUEST, "quantity must be an integer.")
-
-    if quantity <= 0:
-        abort(status.HTTP_400_BAD_REQUEST,
-              "quantity must be a positive integer.")
+    quantity = data.get("quantity")
+    validate_order(data, name, quantity)
 
     existing = None
     for it in order.items:
@@ -265,8 +270,10 @@ def add_order_item(order_id):
         existing.quantity += quantity
         existing.update()
         return jsonify(existing.serialize()), status.HTTP_201_CREATED
-
-    item = Item(order_id=order.id, name=name, quantity=quantity)
+    item = Item()
+    item.order_id = order.id
+    item.name = name
+    item.quantity = quantity
     item.create()
     return jsonify(item.serialize()), status.HTTP_201_CREATED
 
