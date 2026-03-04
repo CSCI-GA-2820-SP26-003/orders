@@ -1,33 +1,31 @@
-# NYU DevOps Project Template
+# NYU Devops Orders Microservice
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python](https://img.shields.io/badge/Language-Python-blue.svg)](https://python.org/)
 
-This is a skeleton you can use to start your projects.
-
-**Note:** _Feel free to overwrite this `README.md` file with the one that describes your project._
+This project implements an `orders` microservice that exposes several different operations and endpoints
+for use within an ecommerce platform. 
 
 ## Overview
 
-This project template contains starter code for your class project. The `/service` folder contains your `models.py` file for your model and a `routes.py` file for your service. The `/tests` folder has test case starter code for testing the model and the service separately. All you need to do is add your functionality. You can use the [lab-flask-tdd](https://github.com/nyu-devops/lab-flask-tdd) for code examples to copy from.
+The `/service` folder contains relevant models (currently `order.py` and `item.py`), 
+as well as a `routes.py` file implementing specific endpoints.
 
-## Automatic Setup
+The `/tests` folder contains testing-related code for both the models and routes.
 
-The best way to use this repo is to start your own repo using it as a git template. To do this just press the green **Use this template** button in GitHub and this will become the source for your repository.
+## How To Run
+1. Clone this repository into a local directory
+2. Ensure that the devcontainers vs code extension is installed, and run `code .` to open the project (`code` may need to be added to `$PATH`)
+3. Run `make test` to run tests
+4. Run `make run` to run the flask server
+5. Navigate to your browser at `http://localhost:8080` to submit requests to the api
 
-## Manual Setup
-
-You can also clone this repository and then copy and paste the starter code into your project repo folder on your local computer. Be careful not to copy over your own `README.md` file so be selective in what you copy.
-
-There are 4 hidden files that you will need to copy manually if you use the Mac Finder or Windows Explorer to copy files from this folder into your repo folder.
-
-These should be copied using a bash shell as follows:
-
-```bash
-    cp .gitignore  ../<your_repo_folder>/
-    cp .flaskenv ../<your_repo_folder>/
-    cp .gitattributes ../<your_repo_folder>/
-```
+## Authors
+- Divi Kapoor
+- Jingrui (Jackson) Feng
+- Borui Zhang
+- Junqi Mao
+- Spenser Laier
 
 ## Contents
 
@@ -42,22 +40,27 @@ dot-env-example     - copy to .env to use environment variables
 pyproject.toml      - Poetry list of Python libraries required by your code
 
 service/                   - service python package
-├── __init__.py            - package initializer
-├── config.py              - configuration parameters
-├── models.py              - module with business models
-├── routes.py              - module with service routes
-└── common                 - common code package
-    ├── cli_commands.py    - Flask command to recreate all tables
-    ├── error_handlers.py  - HTTP error handling code
-    ├── log_handlers.py    - logging setup code
-    └── status.py          - HTTP status constants
+├── __init__.py
+├── common
+│   ├── cli_commands.py
+│   ├── error_handlers.py
+│   ├── log_handlers.py
+│   └── status.py
+├── config.py
+├── models
+│   ├── __init__.py
+│   ├── item.py
+│   ├── order.py
+│   └── persistent_base.py
+└── routes.py
 
 tests/                     - test cases package
-├── __init__.py            - package initializer
-├── factories.py           - Factory for testing with fake objects
-├── test_cli_commands.py   - test suite for the CLI
-├── test_models.py         - test suite for business models
-└── test_routes.py         - test suite for service routes
+├── __init__.py
+├── factories.py
+├── test_cli_commands.py
+├── test_item.py
+├── test_order.py
+└── test_routes.py
 ```
 
 ## License
