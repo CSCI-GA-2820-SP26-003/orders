@@ -219,7 +219,7 @@ def update_orders(order_id):
 ######################################################################
 
 
-def validate_order(data, name, quantity):
+def validate_order(data, name, quantity, unit_price):
     """Helper function to validate order data"""
     if not data:
         abort(status.HTTP_400_BAD_REQUEST, "Request body must be JSON.")
@@ -232,11 +232,17 @@ def validate_order(data, name, quantity):
 
     if not isinstance(name, str) or not name.strip():
         abort(status.HTTP_400_BAD_REQUEST, "name must be a non-empty string.")
-    name = name.strip()
+
     try:
         quantity = int(quantity)
     except (ValueError, TypeError):
         abort(status.HTTP_400_BAD_REQUEST, "quantity must be an integer.")
+
+    if unit_price is not None:
+        try:
+            unit_price = int(unit_price)
+        except (ValueError, TypeError):
+            abort(status.HTTP_400_BAD_REQUEST, "unit_price must be an integer.")
 
     if quantity <= 0:
         abort(status.HTTP_400_BAD_REQUEST,
@@ -267,7 +273,9 @@ def add_order_item(order_id):
     data = request.get_json(silent=True)
     name = data.get("name")
     quantity = data.get("quantity")
-    validate_order(data, name, quantity)
+    unit_price = data.get("unit_price")
+    validate_order(data, name, quantity, unit_price)
+    name = name.strip()
     existing = None
     for it in order.items:
         if getattr(it, "name", None) == name:
@@ -282,6 +290,7 @@ def add_order_item(order_id):
     item.order_id = order.id
     item.name = name
     item.quantity = quantity
+    item.unit_price = unit_price
     item.create()
     return jsonify(item.serialize()), status.HTTP_201_CREATED
 
