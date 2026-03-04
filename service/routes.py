@@ -47,15 +47,17 @@ def index():
         jsonify(
             name="Orders REST API Service",
             version="1.0.0",
-            paths=url_for("orders", _external=True),
+            paths=url_for("list_orders", _external=True),
         ),
         status.HTTP_200_OK,
     )
 
-@app.route("/orders", methods=["GET"])
-def orders():
-    """Returns a list of orders"""
-    return jsonify([]), status.HTTP_200_OK
+
+# @app.route("/orders", methods=["GET"])
+# def orders():
+#     """Returns a list of orders"""
+#     return jsonify([]), status.HTTP_200_OK
+
 
 ######################################################################
 #  R E S T   A P I   E N D P O I N T S
@@ -74,7 +76,7 @@ def create_orders():
     app.logger.info("Request to create an Order")
     check_content_type("application/json")
 
-    # TODO: Check if customer exists before creating the order
+    # We will need to check if customer exists before creating the order
     # customer = Customer.find(customer_id)
     # if not customer:
     #     abort(status.HTTP_404_NOT_FOUND, f"Customer with id '{customer_id}' was not found.")
@@ -91,9 +93,11 @@ def create_orders():
 
     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
 
+
 ######################################################################
 # LIST ALL ORDERS
 ######################################################################
+
 
 @app.route("/orders", methods=["GET"])
 def list_orders():
@@ -106,9 +110,11 @@ def list_orders():
     results = [order.serialize() for order in orders]
     return jsonify(results), status.HTTP_200_OK
 
+
 ######################################################################
 # READ AN ORDER
 ######################################################################
+
 
 @app.route("/orders/<int:order_id>", methods=["GET"])
 def get_order(order_id):
@@ -184,7 +190,6 @@ def get_order_item(order_id, item_id):
 ######################################################################
 # UPDATE AN EXISTING ORDER
 ######################################################################
-
 @app.route("/orders/<int:order_id>", methods=["PUT"])
 def update_orders(order_id):
     """
@@ -208,9 +213,35 @@ def update_orders(order_id):
 
     return jsonify(order.serialize()), status.HTTP_200_OK
 
+
 ######################################################################
 # ADD AN ITEM TO AN ORDER
 ######################################################################
+
+
+def validate_order(data, name, quantity):
+    """Helper function to validate order data"""
+    if not data:
+        abort(status.HTTP_400_BAD_REQUEST, "Request body must be JSON.")
+
+    if "name" not in data or "quantity" not in data:
+        abort(
+            status.HTTP_400_BAD_REQUEST,
+            "Missing required fields: id and quantity are required.",
+        )
+
+    if not isinstance(name, str) or not name.strip():
+        abort(status.HTTP_400_BAD_REQUEST, "name must be a non-empty string.")
+    name = name.strip()
+    try:
+        quantity = int(quantity)
+    except (ValueError, TypeError):
+        abort(status.HTTP_400_BAD_REQUEST, "quantity must be an integer.")
+
+    if quantity <= 0:
+        abort(status.HTTP_400_BAD_REQUEST,
+              "quantity must be a positive integer.")
+
 
 @app.route("/orders/<order_id>/items", methods=["POST"])
 def add_order_item(order_id):
@@ -225,41 +256,19 @@ def add_order_item(order_id):
     try:
         order_id = int(order_id)
     except ValueError:
-        abort(status.HTTP_400_BAD_REQUEST, "Invalid ID: order_id must be an integer.")
+        abort(status.HTTP_400_BAD_REQUEST,
+              "Invalid ID: order_id must be an integer.")
 
     order = Order.find(order_id)
     if not order:
-        abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
-    
+        abort(status.HTTP_404_NOT_FOUND,
+              f"Order with id '{order_id}' was not found.")
+
     data = request.get_json(silent=True)
-    if not data:
-        abort(status.HTTP_400_BAD_REQUEST, "Request body must be JSON.")
-
-    if "name" not in data or "quantity" not in data:
-        abort(
-            status.HTTP_400_BAD_REQUEST,
-            "Missing required fields: id and quantity are required.",
-        )
-    
     name = data.get("name")
-    if not isinstance(name, str) or not name.strip():
-        abort(status.HTTP_400_BAD_REQUEST, "name must be a non-empty string.")
-    name = name.strip()
-
-    try:
-        quantity = int(data["quantity"])
-    except (ValueError, TypeError):
-        abort(status.HTTP_400_BAD_REQUEST, "quantity must be an integer.")
-
-    try:
-        unit_price = int(data["unit_price"])
-    except (ValueError, TypeError):
-        abort(status.HTTP_400_BAD_REQUEST, "unit_price must be an integer.")
-
-    if quantity <= 0:
-        abort(status.HTTP_400_BAD_REQUEST, "quantity must be a positive integer.")
-
-
+    quantity = data.get("quantity")
+    unit_price = int(data["unit_price"])
+    validate_order(data, name, quantity)
     existing = None
     for it in order.items:
         if getattr(it, "name", None) == name:
@@ -267,13 +276,14 @@ def add_order_item(order_id):
             break
 
     if existing:
-        # TODO check unit_price?
         existing.quantity += quantity
-        existing.update() 
+        existing.update()
         return jsonify(existing.serialize()), status.HTTP_201_CREATED
-
-
-    item = Item(order_id=order.id, name=name, quantity=quantity, unit_price = unit_price)
+    item = Item()
+    item.order_id = order.id
+    item.name = name
+    item.quantity = quantity
+    item.unit_price = unit_price
     item.create()
     return jsonify(item.serialize()), status.HTTP_201_CREATED
 
@@ -332,7 +342,7 @@ def update_items(order_id, item_id):
             status.HTTP_404_NOT_FOUND,
             f"Item with id '{item_id}' in Order '{order_id}' could not be found.",
         )
-    
+
     # Update from the json in the body of the request
     item.deserialize(request.get_json())
     item.id = item_id
@@ -350,7 +360,8 @@ def delete_item(order_id, item_id):
     """
     Delete an Item in an Order
     """
-    app.logger.info("Request to delete Item %s from Order %s", item_id, order_id)
+    app.logger.info("Request to delete Item %s from Order %s",
+                    item_id, order_id)
 
     try:
         order_id = int(order_id)
@@ -358,8 +369,8 @@ def delete_item(order_id, item_id):
         if order_id <= 0 or item_id <= 0:
             raise ValueError
     except ValueError:
-        abort(status.HTTP_400_BAD_REQUEST, "Invalid ID: item_id, order_id must be positive integer.")
-
+        abort(status.HTTP_400_BAD_REQUEST,
+              "Invalid ID: item_id, order_id must be positive integer.")
 
     order = Order.find(order_id)
     if not order:
@@ -376,6 +387,7 @@ def delete_item(order_id, item_id):
 
     item.delete()
     return "", status.HTTP_204_NO_CONTENT
+
 
 ######################################################################
 #  U T I L I T Y   F U N C T I O N S
