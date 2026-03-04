@@ -133,15 +133,13 @@ class TestYourResourceService(TestCase):
 
     def test_create_order_no_data(self):
         """It should not Create an Order with missing data"""
-        resp = self.client.post(
-            BASE_URL, json={}, content_type="application/json")
+        resp = self.client.post(BASE_URL, json={}, content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_order_no_content_type(self):
         """It should not Create an Order with no content type"""
         resp = self.client.post(BASE_URL)
-        self.assertEqual(resp.status_code,
-                         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
     def test_create_order_missing_customer_id(self):
         """It should not Create an Order without a customer_id"""
@@ -184,8 +182,7 @@ class TestYourResourceService(TestCase):
 
     def test_get_order_not_found(self):
         """It should not GET an Order that is not found"""
-        resp = self.client.get(
-            f"{BASE_URL}/0", content_type="application/json")
+        resp = self.client.get(f"{BASE_URL}/0", content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     ######################################################################
@@ -217,8 +214,7 @@ class TestYourResourceService(TestCase):
 
     def test_get_order_item_order_not_found(self):
         """It should not GET an Item from a non-existing Order"""
-        resp = self.client.get(f"{BASE_URL}/0/items/1",
-                               content_type="application/json")
+        resp = self.client.get(f"{BASE_URL}/0/items/1", content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_get_order_item_not_found(self):
@@ -326,9 +322,9 @@ class TestYourResourceService(TestCase):
 
     def test_list_order_items_order_not_found(self):
         """It should not list Items for a non-existing Order"""
-        resp = self.client.get(f"{BASE_URL}/0/items",
-                               content_type="application/json")
+        resp = self.client.get(f"{BASE_URL}/0/items", content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
     def test_list_all_orders(self):
         """It should Get a list of Orders"""
         self._create_orders(5)
@@ -340,8 +336,7 @@ class TestYourResourceService(TestCase):
 
     def test_list_order_items_invalid_order_id(self):
         """It should return 400 for an invalid order_id"""
-        resp = self.client.get(f"{BASE_URL}/abc/items",
-                               content_type="application/json")
+        resp = self.client.get(f"{BASE_URL}/abc/items", content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_list_order_items_contains_correct_data(self):
@@ -402,12 +397,11 @@ class TestYourResourceService(TestCase):
         self.assertEqual(len(data), 1)
         for item in data:
             self.assertEqual(item["order_id"], order1_id)
-            
-            
+
     ######################################################################
     #  A D D   O R D E R   I T E M   T E S T   C A S E S
     ######################################################################
-    
+
     def test_add_order_item(self):
         """It should ADD an Item to an Order"""
         order = OrderFactory()
@@ -442,7 +436,6 @@ class TestYourResourceService(TestCase):
         self.assertEqual(data["name"], item_data["name"])
         self.assertEqual(data["quantity"], item_data["quantity"])
 
-
     def test_add_order_item_existing_product_updates_quantity(self):
         """It should UPDATE quantity when adding the same name again"""
         order = OrderFactory()
@@ -476,14 +469,15 @@ class TestYourResourceService(TestCase):
         self.assertEqual(updated["name"], name)
         self.assertEqual(updated["quantity"], first_qty + add_qty)
 
-        resp = self.client.get(f"{BASE_URL}/{order_id}", content_type="application/json")
+        resp = self.client.get(
+            f"{BASE_URL}/{order_id}", content_type="application/json"
+        )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         order_json = resp.get_json()
         same_product_items = [
             it for it in order_json.get("items", []) if it.get("name") == name
         ]
         self.assertEqual(len(same_product_items), 1)
-
 
     def test_add_order_item_order_not_found(self):
         """It should not ADD an Item to a non-existing Order"""
@@ -494,7 +488,6 @@ class TestYourResourceService(TestCase):
         )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
-
     def test_add_order_item_missing_name(self):
         """It should return 400 for missing name"""
         order = self._create_orders(1)[0]
@@ -504,7 +497,6 @@ class TestYourResourceService(TestCase):
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-
 
     def test_add_order_item_invalid_quantity(self):
         """It should return 400 for invalid quantity"""
@@ -526,7 +518,6 @@ class TestYourResourceService(TestCase):
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
-
     def test_add_order_item_invalid_order_id(self):
         """It should return 400 for an invalid order_id"""
         resp = self.client.post(
@@ -536,9 +527,9 @@ class TestYourResourceService(TestCase):
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
-######################################################################
+    ######################################################################
     #  U P D A T E   O R D E R   I T E M   T E S T   C A S E S
-######################################################################
+    ######################################################################
 
     def test_update_item(self):
         """It should Update an item on an order"""
@@ -644,12 +635,13 @@ class TestYourResourceService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
 
         # Verify item removed: GET order and ensure item_id not in items
-        resp = self.client.get(f"{BASE_URL}/{order_id}", content_type="application/json")
+        resp = self.client.get(
+            f"{BASE_URL}/{order_id}", content_type="application/json"
+        )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         order_json = resp.get_json()
         remaining_ids = [it.get("id") for it in order_json.get("items", [])]
         self.assertNotIn(item_id, remaining_ids)
-
 
     def test_delete_order_item_invalid_order_id(self):
         """It should return 400 for an invalid order_id"""
@@ -665,7 +657,6 @@ class TestYourResourceService(TestCase):
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
-
 
     def test_delete_order_item_invalid_item_id(self):
         """It should return 400 for an invalid item_id"""
@@ -683,7 +674,6 @@ class TestYourResourceService(TestCase):
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
-
     def test_delete_order_item_order_not_found(self):
         """It should return 404 when deleting an Item from a non-existing Order"""
         resp = self.client.delete(
@@ -691,7 +681,6 @@ class TestYourResourceService(TestCase):
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
-
 
     def test_delete_order_item_not_found_in_order(self):
         """It should return 404 when the Item does not exist within the specified Order"""
@@ -715,7 +704,6 @@ class TestYourResourceService(TestCase):
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
-
 
     def test_delete_order_item_exists_but_in_other_order(self):
         """It should return 404 when the Item exists but not in this Order"""
