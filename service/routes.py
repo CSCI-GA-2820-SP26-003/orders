@@ -247,8 +247,6 @@ def validate_order(data, name, quantity, unit_price):
         abort(status.HTTP_400_BAD_REQUEST,
               "quantity must be a positive integer.")
 
-    #TODO check unit_price?
-
 
 @app.route("/orders/<order_id>/items", methods=["POST"])
 def add_order_item(order_id):
