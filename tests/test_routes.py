@@ -601,3 +601,143 @@ class TestYourResourceService(TestCase):
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    ######################################################################
+    #  D E L E T E   O R D E R   I T E M   T E S T   C A S E S
+    ######################################################################
+
+    def test_delete_order_item(self):
+        """It should DELETE an Item from an Order"""
+
+        order = OrderFactory()
+        item = ItemFactory()
+
+        order_data = order.serialize()
+        item_data = item.serialize()
+
+        order_data["items"] = [item_data]
+
+        resp = self.client.post(
+            BASE_URL, json=order_data, content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        new_order = resp.get_json()
+        order_id = new_order["id"]
+
+        # Grab item_id from created order response
+        self.assertIn("items", new_order)
+        self.assertGreaterEqual(len(new_order["items"]), 1)
+        item_id = new_order["items"][0]["id"]
+
+        # DELETE /orders/{order_id}/items/{item_id}
+        resp = self.client.delete(
+            f"{BASE_URL}/{order_id}/items/{item_id}",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_204_NO_CONTENT)
+
+        # Verify item removed: GET order and ensure item_id not in items
+        resp = self.client.get(f"{BASE_URL}/{order_id}", content_type="application/json")
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        order_json = resp.get_json()
+        remaining_ids = [it.get("id") for it in order_json.get("items", [])]
+        self.assertNotIn(item_id, remaining_ids)
+
+
+    def test_delete_order_item_invalid_order_id(self):
+        """It should return 400 for an invalid order_id"""
+
+        resp = self.client.delete(
+            f"{BASE_URL}/abc/items/1",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+        resp = self.client.delete(
+            f"{BASE_URL}/0/items/1",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+    def test_delete_order_item_invalid_item_id(self):
+        """It should return 400 for an invalid item_id"""
+        order = self._create_orders(1)[0]
+
+        resp = self.client.delete(
+            f"{BASE_URL}/{order.id}/items/abc",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+        resp = self.client.delete(
+            f"{BASE_URL}/{order.id}/items/0",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+
+    def test_delete_order_item_order_not_found(self):
+        """It should return 404 when deleting an Item from a non-existing Order"""
+        resp = self.client.delete(
+            f"{BASE_URL}/999999/items/1",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+
+    def test_delete_order_item_not_found_in_order(self):
+        """It should return 404 when the Item does not exist within the specified Order"""
+        # Create an order with one item
+        order = OrderFactory()
+        item = ItemFactory()
+
+        order_data = order.serialize()
+        item_data = item.serialize()
+        order_data["items"] = [item_data]
+
+        resp = self.client.post(
+            BASE_URL, json=order_data, content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        new_order = resp.get_json()
+        order_id = new_order["id"]
+
+        resp = self.client.delete(
+            f"{BASE_URL}/{order_id}/items/999999",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+
+    def test_delete_order_item_exists_but_in_other_order(self):
+        """It should return 404 when the Item exists but not in this Order"""
+        # Create order A with item
+        order_a = OrderFactory()
+        item = ItemFactory()
+        order_a_data = order_a.serialize()
+        item_data = item.serialize()
+        order_a_data["items"] = [item_data]
+
+        resp = self.client.post(
+            BASE_URL, json=order_a_data, content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        order_a_json = resp.get_json()
+        item_id = order_a_json["items"][0]["id"]
+
+        # Create order B (empty)
+        order_b = OrderFactory()
+        order_b_data = order_b.serialize()
+        order_b_data["items"] = []
+        resp = self.client.post(
+            BASE_URL, json=order_b_data, content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        order_b_id = resp.get_json()["id"]
+
+        # Try deleting item from order B -> should be 404
+        resp = self.client.delete(
+            f"{BASE_URL}/{order_b_id}/items/{item_id}",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)

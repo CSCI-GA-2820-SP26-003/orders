@@ -201,6 +201,7 @@ def add_order_item(order_id):
     """
     Add an Item to an Order
     If the same id already exists in the order, update quantity.
+    This endpoint will add Item based the body that is posted
     """
     app.logger.info("Request to add Item to Order %s", order_id)
     check_content_type("application/json")
@@ -319,6 +320,41 @@ def update_items(order_id, item_id):
 
     return jsonify(item.serialize()), status.HTTP_200_OK
 
+
+######################################################################
+# DELETE AN ITEM FROM AN ORDER
+######################################################################
+@app.route("/orders/<order_id>/items/<item_id>", methods=["DELETE"])
+def delete_item(order_id, item_id):
+    """
+    Delete an Item in an Order
+    """
+    app.logger.info("Request to delete Item %s from Order %s", item_id, order_id)
+
+    try:
+        order_id = int(order_id)
+        item_id = int(item_id)
+        if order_id <= 0 or item_id <= 0:
+            raise ValueError
+    except ValueError:
+        abort(status.HTTP_400_BAD_REQUEST, "Invalid ID: item_id, order_id must be positive integer.")
+
+
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' could not be found."
+        )
+
+    item = Item.find(item_id)
+    if not item or item.order_id != order_id:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Item with id '{item_id}' in Order '{order_id}' could not be found.",
+        )
+
+    item.delete()
+    return "", status.HTTP_204_NO_CONTENT
 
 ######################################################################
 #  U T I L I T Y   F U N C T I O N S
