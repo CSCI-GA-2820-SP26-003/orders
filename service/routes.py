@@ -53,6 +53,12 @@ def index():
     )
 
 
+# @app.route("/orders", methods=["GET"])
+# def orders():
+#     """Returns a list of orders"""
+#     return jsonify([]), status.HTTP_200_OK
+
+
 ######################################################################
 #  R E S T   A P I   E N D P O I N T S
 ######################################################################
@@ -87,6 +93,7 @@ def create_orders():
 
     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
 
+
 ######################################################################
 # LIST ALL ORDERS
 ######################################################################
@@ -102,6 +109,7 @@ def list_orders():
     orders = Order.all()
     results = [order.serialize() for order in orders]
     return jsonify(results), status.HTTP_200_OK
+
 
 ######################################################################
 # READ AN ORDER
@@ -205,6 +213,7 @@ def update_orders(order_id):
 
     return jsonify(order.serialize()), status.HTTP_200_OK
 
+
 ######################################################################
 # ADD AN ITEM TO AN ORDER
 ######################################################################
@@ -259,7 +268,6 @@ def add_order_item(order_id):
     name = data.get("name")
     quantity = data.get("quantity")
     validate_order(data, name, quantity)
-
     existing = None
     for it in order.items:
         if getattr(it, "name", None) == name:
@@ -377,6 +385,7 @@ def delete_item(order_id, item_id):
 
     item.delete()
     return "", status.HTTP_204_NO_CONTENT
+
 
 ######################################################################
 #  U T I L I T Y   F U N C T I O N S

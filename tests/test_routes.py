@@ -480,7 +480,8 @@ class TestYourResourceService(TestCase):
         self.assertEqual(updated["quantity"], first_qty + add_qty)
 
         resp = self.client.get(
-            f"{BASE_URL}/{order_id}", content_type="application/json")
+            f"{BASE_URL}/{order_id}", content_type="application/json"
+        )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         order_json = resp.get_json()
         same_product_items = [
@@ -536,9 +537,9 @@ class TestYourResourceService(TestCase):
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
-######################################################################
+    ######################################################################
     #  U P D A T E   O R D E R   I T E M   T E S T   C A S E S
-######################################################################
+    ######################################################################
 
     def test_update_item(self):
         """It should Update an item on an order"""
@@ -643,7 +644,8 @@ class TestYourResourceService(TestCase):
 
         # Verify item removed: GET order and ensure item_id not in items
         resp = self.client.get(
-            f"{BASE_URL}/{order_id}", content_type="application/json")
+            f"{BASE_URL}/{order_id}", content_type="application/json"
+        )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         order_json = resp.get_json()
         remaining_ids = [it.get("id") for it in order_json.get("items", [])]
