@@ -238,10 +238,11 @@ def validate_order(data, name, quantity, unit_price):
     except (ValueError, TypeError):
         abort(status.HTTP_400_BAD_REQUEST, "quantity must be an integer.")
 
-    try:
-        unit_price = int(unit_price)
-    except (ValueError, TypeError):
-        abort(status.HTTP_400_BAD_REQUEST, "unit_price must be an integer.")
+    if unit_price is not None:
+        try:
+            unit_price = int(unit_price)
+        except (ValueError, TypeError):
+            abort(status.HTTP_400_BAD_REQUEST, "unit_price must be an integer.")
 
     if quantity <= 0:
         abort(status.HTTP_400_BAD_REQUEST,
