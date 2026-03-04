@@ -91,6 +91,19 @@ def create_orders():
 
     return jsonify(message), status.HTTP_201_CREATED, {"Location": location_url}
 
+######################################################################
+# LIST ALL ORDERS
+######################################################################
+@app.route("/orders", methods=["GET"])
+def list_orders():
+    """
+    Retrieve a list of Orders
+    This endpoint will return all Orders
+    """
+    app.logger.info("Request to list all Orders")
+    orders = Order.all()
+    results = [order.serialize() for order in orders]
+    return jsonify(results), status.HTTP_200_OK
 
 ######################################################################
 # READ AN ORDER
