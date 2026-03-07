@@ -1,0 +1,82 @@
+name: CI Build
+on:
+  push:
+    branches:
+      - master
+    paths-ignore:
+    - 'README.md'
+
+  pull_request:
+    branches:
+      - master
+    paths-ignore:
+    - 'README.md'
+
+jobs:
+  tests-and-coverage:
+    runs-on: ubuntu-latest
+    # use a known build environment
+    container: python:3.11-slim
+
+    # Required services    
+    services:
+      # Label used to access the service container
+      postgres:
+        image: postgres
+        env:
+          POSTGRES_PASSWORD: pgs3cr3t
+          POSTGRES_DB: testdb
+        ports:
+          - 5432:5432
+        # Set health checks to wait until postgres has started
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    # Steps for the build
+    steps:
+      - name: Install Node
+        run: |
+          apt-get update
+          apt-get install -y nodejs npm git
+      - name: Checkout
+        uses: actions/checkout@v3
+      
+      - name: Install Python package dependencies
+        run: |
+          python -m pip install -U pip pipenv
+          pipenv install --system --dev
+
+      - name: Run unit tests with nose
+        run: |
+          pytest --pspec --cov=service --cov-fail-under=95
+        env:
+          FLASK_APP: wsgi:app
+          DATABASE_URI: "postgresql+psycopg://postgres:pgs3cr3t@postgres:5432/testdb"
+
+      - name: Upload code coverage
+        uses: codecov/codecov-action@v3.1.4
+  linting:
+    runs-on: ubuntu-latest
+    # use a known build environment
+    container: python:3.11-slim
+    steps:
+      - name: Install Node
+        run: |
+          apt-get update
+          apt-get install -y nodejs npm git
+      - name: Checkout
+        uses: actions/checkout@v3
+      
+      - name: Install Python package dependencies
+        run: |
+          python -m pip install -U pip pipenv
+          pipenv install --system --dev
+
+      - name: Linting
+        run: |
+          flake8 service tests --count --select=E9,F63,F7,F82 --show-source --statistics
+          flake8 service tests --count --max-complexity=10 --max-line-length=127 --statistics
+          pylint service tests --max-line-length=127 --fail-under=10
