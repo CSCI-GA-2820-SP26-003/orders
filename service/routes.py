@@ -414,4 +414,12 @@ def check_content_type(content_type):
     )
 
 
+def dummy_untested():
+    """Dummy function for testing Codecov."""
+    x = 1
+    y = 2
+    z = 3
+    return x + y + z
+
+
 # Codecov baseline trigger
