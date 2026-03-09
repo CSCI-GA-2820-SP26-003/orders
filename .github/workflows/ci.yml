@@ -68,6 +68,9 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: CSCI-GA-2820-SP26-003/orders
+          files: ./coverage.xml
+          verbose: true
+          
   linting:
     runs-on: ubuntu-latest
     # use a known build environment
