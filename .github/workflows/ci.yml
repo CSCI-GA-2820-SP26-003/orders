@@ -56,8 +56,18 @@ jobs:
           FLASK_APP: wsgi:app
           DATABASE_URI: "postgresql+psycopg://postgres:pgs3cr3t@postgres:5432/testdb"
 
-      - name: Upload code coverage
-        uses: codecov/codecov-action@v3.1.4
+      ######################################################################
+      # Codecov part
+      ######################################################################
+
+      - name: Install packages for Codecov to work
+        run: apt-get update && apt-get install -y git curl gpg
+
+      - name: Upload coverage reports to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: CSCI-GA-2820-SP26-003/orders
   linting:
     runs-on: ubuntu-latest
     # use a known build environment
@@ -80,16 +90,3 @@ jobs:
           flake8 service tests --count --select=E9,F63,F7,F82 --show-source --statistics
           flake8 service tests --count --max-complexity=10 --max-line-length=127 --statistics
           pylint service tests --max-line-length=127 --fail-under=10
-
-      ######################################################################
-      # Codecov part
-      ######################################################################
-
-      - name: Install packages for Codecov to work
-        run: apt-get update && apt-get install -y git curl gpg
-
-      - name: Upload coverage reports to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          slug: CSCI-GA-2820-SP26-003/orders
