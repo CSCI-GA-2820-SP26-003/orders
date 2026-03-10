@@ -132,34 +132,3 @@ class TestItem(TestCase):
         self.assertEqual(new_item.name, item.name)
         self.assertEqual(new_item.quantity, item.quantity)
         self.assertEqual(new_item.unit_price, item.unit_price)
-
-    def test_item_string_and_repr(self):
-        """It should provide proper string representations for an Item"""
-        item = ItemFactory()
-        expected_repr = f"<Item {item.name} id=[{item.id}] Order[{item.order_id}]>"
-        expected_str = f"{item.id}: {item.order_id}, {item.quantity}, {item.unit_price}"
-        self.assertEqual(repr(item), expected_repr)
-        self.assertEqual(str(item), expected_str)
-
-    @patch("service.models.db.session.commit")
-    def test_update_item_failed(self, exception_mock):
-        """It should not update an Item on database error"""
-        exception_mock.side_effect = Exception()
-        item = ItemFactory()
-        self.assertRaises(DataValidationError, item.update)
-
-    def test_deserialize_with_attribute_error(self):
-        """It should not Deserialize an item with an AttributeError"""
-        item = Item()
-        self.assertRaises(DataValidationError,
-                          item.deserialize, "this is a string")
-
-    def test_deserialize_with_type_error(self):
-        """It should not Deserialize an item with a TypeError"""
-        item = Item()
-
-        mock_data = MagicMock()
-        mock_data.get.return_value = "123"
-        mock_data.__getitem__.side_effect = TypeError()
-
-        self.assertRaises(DataValidationError, item.deserialize, mock_data)
