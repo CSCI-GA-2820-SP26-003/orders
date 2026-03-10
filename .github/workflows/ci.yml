@@ -49,9 +49,9 @@ jobs:
           python -m pip install -U pip pipenv
           pipenv install --system --dev
 
-      - name: Run unit tests with nose
+      - name: Run unit tests with pytest
         run: |
-          pytest --pspec --cov=service --cov-report=xml --cov-fail-under=95
+          pytest -v --cov=service --cov-report=xml --cov-fail-under=95
         env:
           FLASK_APP: wsgi:app
           DATABASE_URI: "postgresql+psycopg://postgres:pgs3cr3t@postgres:5432/testdb"
