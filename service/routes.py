@@ -95,7 +95,7 @@ def create_orders():
 
 
 ######################################################################
-# LIST ALL ORDERS
+# LIST ALL ORDERS / QUERY ORDERS BY CUSTOMER ID
 ######################################################################
 
 
@@ -103,10 +103,21 @@ def create_orders():
 def list_orders():
     """
     Retrieve a list of Orders
-    This endpoint will return all Orders
+    This endpoint will return all Orders unless a query string parameter
+    is provided to filter results. Supported query parameters:
+      - customer_id: filters orders belonging to a specific customer
+
+    If no query string is provided, all orders are returned.
+    If no orders match the filter, an empty list is returned with 200 OK.
     """
     app.logger.info("Request to list all Orders")
-    orders = Order.all()
+
+    customer_id = request.args.get("customer_id")
+    if customer_id:
+        orders = Order.query.filter(Order.customer_id == customer_id).all()
+    else:
+        orders = Order.all()
+
     results = [order.serialize() for order in orders]
     return jsonify(results), status.HTTP_200_OK
 
