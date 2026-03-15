@@ -1,3 +1,9 @@
+# lab-github-actions
+
+[![Build Status](https://github.com/CSCI-GA-2820-SP26-003/orders/actions/workflows/ci.yml/badge.svg)](https://github.com/CSCI-GA-2820-SP26-003/orders/actions)
+
+[![codecov](https://codecov.io/gh/CSCI-GA-2820-SP26-003/orders/graph/badge.svg?token=1QJGFVMZA4)](https://codecov.io/gh/CSCI-GA-2820-SP26-003/orders)
+
 # NYU Devops Orders Microservice
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
