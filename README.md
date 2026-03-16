@@ -2,6 +2,8 @@
 
 [![License](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Python](https://img.shields.io/badge/Language-Python-blue.svg)](https://python.org/)
+[![Build Status](https://github.com/CSCI-GA-2820-SP26-003/orders/actions/workflows/ci.yml/badge.svg)](https://github.com/CSCI-GA-2820-SP26-003/orders/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/CSCI-GA-2820-SP26-003/orders/branch/master/graph/badge.svg)](https://codecov.io/gh/CSCI-GA-2820-SP26-003/orders)
 
 This project implements an `orders` microservice that exposes several different operations and endpoints
 for use within an ecommerce platform. 
