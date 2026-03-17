@@ -19,8 +19,10 @@ Persistent Base class for database CRUD functions
 """
 
 import logging
+from datetime import datetime
 from .persistent_base import db, PersistentBase, DataValidationError
 from .item import Item
+
 
 logger = logging.getLogger("flask.app")
 
@@ -39,6 +41,8 @@ class Order(db.Model, PersistentBase):
     # phone number is optional
     items = db.relationship(
         "Item", backref="order", passive_deletes=True)
+    date_created = db.Column(
+        db.DateTime, nullable=False, default=datetime.utcnow)
 
     def __repr__(self):
         return f"<Order {self.id} items=[{self.items}]>"
@@ -49,6 +53,7 @@ class Order(db.Model, PersistentBase):
             "id": self.id,
             "customer_id": self.customer_id,
             "items": [],
+            "date_created": self.date_created.isoformat() if self.date_created else None,
         }
         for item in self.items:
             order["items"].append(item.serialize())

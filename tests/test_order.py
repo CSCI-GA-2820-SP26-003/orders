@@ -47,6 +47,8 @@ class TestOrder(TestCase):
         app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URI
         app.logger.setLevel(logging.CRITICAL)
         app.app_context().push()
+        # db.drop_all()
+        # db.create_all()
 
     @classmethod
     def tearDownClass(cls):
@@ -88,6 +90,7 @@ class TestOrder(TestCase):
         self.assertIsNotNone(order.id)
         orders = Order.all()
         self.assertEqual(len(orders), 1)
+        self.assertIsNotNone(order.date_created)
 
     @patch("service.models.db.session.commit")
     def test_add_order_failed(self, exception_mock):
@@ -137,6 +140,7 @@ class TestOrder(TestCase):
         self.assertEqual(serial_order["id"], order.id)
         self.assertEqual(serial_order["customer_id"], order.customer_id)
         self.assertEqual(len(serial_order["items"]), 1)
+        # self.assertEqual(serial_order["date_created"], order.date_created.isoformat())
         items = serial_order["items"]
         self.assertEqual(items[0]["id"], item.id)
         self.assertEqual(items[0]["name"], item.name)
@@ -152,6 +156,7 @@ class TestOrder(TestCase):
         new_order = Order()
         new_order.deserialize(serial_order)
         self.assertEqual(new_order.customer_id, order.customer_id)
+        self.assertIsNone(new_order.date_created)
 
     def test_deserialize_with_key_error(self):
         """It should not Deserialize an order with a KeyError"""
