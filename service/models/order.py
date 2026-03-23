@@ -20,9 +20,9 @@ Persistent Base class for database CRUD functions
 
 import logging
 from datetime import datetime
+from enum import Enum
 from .persistent_base import db, PersistentBase, DataValidationError
 from .item import Item
-from enum import Enum
 
 
 logger = logging.getLogger("flask.app")

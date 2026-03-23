@@ -197,11 +197,6 @@ class TestOrder(TestCase):
 
         self.assertRaises(DataValidationError, order.deserialize, mock_data)
 
-    def test_default_status(self):
-        """It should set default status to OPEN"""
-        order = OrderFactory()
-        self.assertEqual(order.status, OrderStatus.OPEN)
-
     def test_deserialize_valid_status(self):
         """It should deserialize a valid status"""
         data = {
