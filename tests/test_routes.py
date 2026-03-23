@@ -260,7 +260,7 @@ class TestYourResourceService(TestCase):
         self.assertEqual(updated_order["id"], new_order_id)
 
     def test_update_order_not_found_returns_404(self):
-        """PUT /orders/<id> should 404 when the order does not exist"""
+        """It should return 404 when the Order does not exist"""
         payload = {
             "customer_id": 1,
             "items": [],
@@ -768,3 +768,48 @@ class TestYourResourceService(TestCase):
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
         data = resp.get_json()
         self.assertEqual(len(data), 0)
+
+    ######################################################################
+    #  C A N C E L   O R D E R   T E S T   C A S E S
+    ######################################################################
+
+    def test_cancel_order(self):
+        """It should cancel an open Order"""
+        order = self._create_orders(1)[0]
+        resp = self.client.put(
+            f"{BASE_URL}/{order.id}/cancel",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(data["status"], "CANCELED")
+
+    def test_cancel_order_not_found(self):
+        """It should return 404 when cancelling a non-existing Order"""
+        resp = self.client.put(
+            f"{BASE_URL}/999999/cancel",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_cancel_order_already_cancelled(self):
+        """It should return 409 when cancelling an already cancelled Order"""
+        order = self._create_orders(1)[0]
+        resp = self.client.put(
+            f"{BASE_URL}/{order.id}/cancel",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        resp = self.client.put(
+            f"{BASE_URL}/{order.id}/cancel",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_409_CONFLICT)
+
+    def test_cancel_order_invalid_id(self):
+        """It should return 400 for an invalid order_id"""
+        resp = self.client.put(
+            f"{BASE_URL}/abc/cancel",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
