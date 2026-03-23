@@ -27,6 +27,7 @@ from enum import Enum
 
 logger = logging.getLogger("flask.app")
 
+
 class OrderStatus(str, Enum):
     """Order Status Enum"""
     OPEN = "OPEN"
@@ -37,6 +38,8 @@ class OrderStatus(str, Enum):
 ######################################################################
 #  O R D E R   M O D E L
 ######################################################################
+
+
 class Order(db.Model, PersistentBase):
     """
     Class that represents an Order
@@ -82,13 +85,10 @@ class Order(db.Model, PersistentBase):
         try:
             self.customer_id = data["customer_id"]
             status = data.get("status", OrderStatus.OPEN)
-            if isinstance(status, str):
-                try:
-                    self.status = OrderStatus(status)
-                except ValueError as error:
-                    raise DataValidationError(f"Invalid status: {status}") from error
-            else:
-                self.status = status
+            try:
+                self.status = OrderStatus(status)
+            except ValueError as error:
+                raise DataValidationError(f"Invalid status: {status}") from error
 
             # handle inner list of items
             items_list = data.get("items", [])

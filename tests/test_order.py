@@ -222,4 +222,3 @@ class TestOrder(TestCase):
         }
         order = Order()
         self.assertRaises(DataValidationError, order.deserialize, data)
-    
