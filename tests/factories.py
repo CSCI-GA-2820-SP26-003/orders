@@ -18,7 +18,7 @@
 Test Factory to make fake objects for testing
 """
 from factory import Factory, SubFactory, Sequence, Faker, post_generation
-from service.models import Item, Order
+from service.models import Item, Order, OrderStatus
 
 
 class OrderFactory(Factory):
@@ -31,6 +31,7 @@ class OrderFactory(Factory):
 
     id = Sequence(lambda n: n)
     customer_id = Sequence(lambda n: f"User{n:04d}")
+    status = OrderStatus.OPEN
     # the many side of relationships can be a little wonky in factory boy:
     # https://factoryboy.readthedocs.io/en/latest/recipes.html#simple-many-to-many-relationship
 

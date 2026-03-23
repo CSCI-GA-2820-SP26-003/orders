@@ -20,6 +20,7 @@ Persistent Base class for database CRUD functions
 
 import logging
 from datetime import datetime
+from enum import Enum
 from .persistent_base import db, PersistentBase, DataValidationError
 from .item import Item
 
@@ -27,9 +28,18 @@ from .item import Item
 logger = logging.getLogger("flask.app")
 
 
+class OrderStatus(str, Enum):
+    """Order Status Enum"""
+    OPEN = "OPEN"
+    SHIPPED = "SHIPPED"
+    DELIVERED = "DELIVERED"
+    CANCELED = "CANCELED"
+
 ######################################################################
 #  O R D E R   M O D E L
 ######################################################################
+
+
 class Order(db.Model, PersistentBase):
     """
     Class that represents an Order
@@ -41,6 +51,11 @@ class Order(db.Model, PersistentBase):
     # phone number is optional
     items = db.relationship(
         "Item", backref="order", passive_deletes=True)
+    status = db.Column(
+        db.Enum(OrderStatus, native=False, length=30),
+        default=OrderStatus.OPEN,
+        nullable=False,
+    )
     date_created = db.Column(
         db.DateTime, nullable=False, default=datetime.utcnow)
 
@@ -53,6 +68,7 @@ class Order(db.Model, PersistentBase):
             "id": self.id,
             "customer_id": self.customer_id,
             "items": [],
+            "status": self.status.value if isinstance(self.status, OrderStatus) else self.status,
             "date_created": self.date_created.isoformat() if self.date_created else None,
         }
         for item in self.items:
@@ -68,8 +84,15 @@ class Order(db.Model, PersistentBase):
         """
         try:
             self.customer_id = data["customer_id"]
+            status = data.get("status", OrderStatus.OPEN)
+            try:
+                self.status = OrderStatus(status)
+            except ValueError as error:
+                raise DataValidationError(f"Invalid status: {status}") from error
+
             # handle inner list of items
             items_list = data.get("items", [])
+            self.items = []
             for json_item in items_list:
                 item = Item()
                 item.deserialize(json_item)
