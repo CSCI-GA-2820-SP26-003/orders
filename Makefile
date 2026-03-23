@@ -39,6 +39,8 @@ lint: ## Run the linter
 .PHONY: test
 test: ## Run the unit tests
 	$(info Running tests...)
+	# Rebuild tables to pick up model changes (can be removed once schema is stable)
+	flask db-create
 	export RETRY_COUNT=1; pytest --pspec --cov=service --cov-fail-under=95 --disable-warnings
 
 .PHONY: run
