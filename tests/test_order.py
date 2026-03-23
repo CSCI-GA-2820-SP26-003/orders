@@ -26,7 +26,7 @@ from unittest.mock import patch
 import logging
 import os
 from wsgi import app
-from service.models import Order, Item, DataValidationError, db
+from service.models import Order, Item, DataValidationError, db, OrderStatus
 from tests.factories import OrderFactory, ItemFactory
 
 DATABASE_URI = os.getenv(
@@ -88,6 +88,7 @@ class TestOrder(TestCase):
         order.create()
         # Assert that it was assigned an id and shows up in the database
         self.assertIsNotNone(order.id)
+        self.assertEqual(order.status, OrderStatus.OPEN)
         orders = Order.all()
         self.assertEqual(len(orders), 1)
         self.assertIsNotNone(order.date_created)
@@ -139,6 +140,7 @@ class TestOrder(TestCase):
         serial_order = order.serialize()
         self.assertEqual(serial_order["id"], order.id)
         self.assertEqual(serial_order["customer_id"], order.customer_id)
+        self.assertEqual(serial_order["status"], order.status.value)
         self.assertEqual(len(serial_order["items"]), 1)
         # self.assertEqual(serial_order["date_created"], order.date_created.isoformat())
         items = serial_order["items"]
@@ -156,6 +158,7 @@ class TestOrder(TestCase):
         new_order = Order()
         new_order.deserialize(serial_order)
         self.assertEqual(new_order.customer_id, order.customer_id)
+        self.assertEqual(new_order.status, order.status)
         self.assertIsNone(new_order.date_created)
 
     def test_deserialize_with_key_error(self):
@@ -193,3 +196,30 @@ class TestOrder(TestCase):
         del mock_data.get
 
         self.assertRaises(DataValidationError, order.deserialize, mock_data)
+
+    def test_default_status(self):
+        """It should set default status to OPEN"""
+        order = OrderFactory()
+        self.assertEqual(order.status, OrderStatus.OPEN)
+
+    def test_deserialize_valid_status(self):
+        """It should deserialize a valid status"""
+        data = {
+            "customer_id": "C1234",
+            "status": "SHIPPED",
+            "items": []
+        }
+        order = Order()
+        order.deserialize(data)
+        self.assertEqual(order.status.value, "SHIPPED")
+
+    def test_deserialize_invalid_status(self):
+        """It should not deserialize an invalid status"""
+        data = {
+            "customer_id": "C1234",
+            "status": "INVALID_STATUS",
+            "items": []
+        }
+        order = Order()
+        self.assertRaises(DataValidationError, order.deserialize, data)
+    
