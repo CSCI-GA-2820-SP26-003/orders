@@ -23,7 +23,7 @@ and Delete Order
 
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
-from service.models import Order, Item
+from service.models import Order, Item, OrderStatus
 from service.common import status  # HTTP Status Codes
 
 
@@ -423,6 +423,40 @@ def check_content_type(content_type):
     abort(
         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, f"Content-Type must be {content_type}"
     )
+
+
+######################################################################
+# CANCEL AN ORDER
+######################################################################
+@app.route("/orders/<order_id>/cancel", methods=["PUT"])
+def cancel_order(order_id):
+    """
+    Cancel an Order
+    This endpoint will cancel an Order by setting its status to CANCELED
+    """
+    app.logger.info("Request to cancel Order %s", order_id)
+    try:
+        order_id = int(order_id)
+    except ValueError:
+        abort(status.HTTP_400_BAD_REQUEST, "Invalid ID: order_id must be an integer.")
+
+    order = Order.find(order_id)
+    if not order:
+        abort(
+            status.HTTP_404_NOT_FOUND,
+            f"Order with id '{order_id}' was not found.",
+        )
+
+    if order.status == OrderStatus.CANCELED:
+        abort(
+            status.HTTP_409_CONFLICT,
+            f"Order with id '{order_id}' is already cancelled.",
+        )
+
+    order.status = OrderStatus.CANCELED
+    order.update()
+
+    return jsonify(order.serialize()), status.HTTP_200_OK
 
 
 # Codecov baseline trigger
