@@ -14,7 +14,7 @@ for use within an ecommerce platform.
 
 ## Overview
 
-The Orders Service is a RESTful microservice for managing orders and their line items. It is built with Flask, SQLAlchemy, and PostgreSQL, and follows a test-driven development workflow with 95%+ code coverage.
+The Orders Service is a RESTful microservice for managing orders and their line items. It is built with Flask, SQLAlchemy, and PostgreSQL.
 
 ## API Endpoints
 
