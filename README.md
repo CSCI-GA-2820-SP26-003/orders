@@ -14,17 +14,66 @@ for use within an ecommerce platform.
 
 ## Overview
 
-The `/service` folder contains relevant models (currently `order.py` and `item.py`), 
-as well as a `routes.py` file implementing specific endpoints.
+The Orders Service is a RESTful microservice for managing orders and their line items. It is built with Flask, SQLAlchemy, and PostgreSQL.
 
-The `/tests` folder contains testing-related code for both the models and routes.
+## API Endpoints
+
+### Orders
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/orders` | Create a new order |
+| GET | `/orders` | List all orders |
+| GET | `/orders/{order_id}` | Retrieve a single order |
+| PUT | `/orders/{order_id}` | Update an existing order |
+| DELETE | `/orders/{order_id}` | Delete an order |
+
+### Order Actions
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| PUT | `/orders/{order_id}/cancel` | Cancel an order (sets status to CANCELED) |
+
+### Order Items
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/orders/{order_id}/items` | Add an item to an order |
+| GET | `/orders/{order_id}/items` | List all items in an order |
+| GET | `/orders/{order_id}/items/{item_id}` | Retrieve a specific item |
+| PUT | `/orders/{order_id}/items/{item_id}` | Update an item |
+| DELETE | `/orders/{order_id}/items/{item_id}` | Delete an item |
+
+### Query Parameters
+
+| Endpoint | Parameter | Description |
+|----------|-----------|-------------|
+| GET `/orders` | `customer_id` | Filter orders by customer ID |
+
+### Cancel Order Example
+```bash
+# Cancel an open order
+curl -X PUT http://localhost:8080/orders/1/cancel
+
+# Response: 200 OK — order cancelled
+# Response: 409 Conflict — order is already cancelled
+# Response: 404 Not Found — order does not exist
+```
+
+### Query Orders Example
+```bash
+# Get all orders for a specific customer
+curl http://localhost:8080/orders?customer_id=User0001
+```
 
 ## How To Run
-1. Clone this repository into a local directory
-2. Ensure that the devcontainers vs code extension is installed, and run `code .` to open the project (`code` may need to be added to `$PATH`)
-3. Run `make test` to run tests
-4. Run `make run` to run the flask server
-5. Navigate to your browser at `http://localhost:8080` to submit requests to the api
+
+1. Clone this repository
+2. Install the [Dev Containers](https://marketplace.visualstudio.com/items?itemName=ms-vscode-remote.remote-containers) VS Code extension
+3. Open the project with `code .` and reopen in the dev container when prompted
+4. Run `make test` to run the test suite
+5. Run `make run` to start the Flask server
+6. Send requests to `http://localhost:8080`
 
 ## Authors
 - Divi Kapoor
