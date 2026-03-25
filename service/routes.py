@@ -106,6 +106,7 @@ def list_orders():
     This endpoint will return all Orders unless a query string parameter
     is provided to filter results. Supported query parameters:
       - customer_id: filters orders belonging to a specific customer
+      - status: filters orders by lifecycle state
 
     If no query string is provided, all orders are returned.
     If no orders match the filter, an empty list is returned with 200 OK.
@@ -113,11 +114,28 @@ def list_orders():
     app.logger.info("Request to list all Orders")
 
     customer_id = request.args.get("customer_id")
-    if customer_id:
-        orders = Order.query.filter(Order.customer_id == customer_id).all()
-    else:
-        orders = Order.all()
+    status_param = request.args.get("status")
 
+    query = Order.query
+
+    if customer_id:
+        query = query.filter(Order.customer_id == customer_id)
+
+    if status_param:
+        normalized_status = status_param.strip().upper()
+
+        # Support issue wording "cancelled" while model uses "CANCELED"
+        if normalized_status == "CANCELLED":
+            normalized_status = "CANCELED"
+
+        try:
+            order_status = OrderStatus(normalized_status)
+        except ValueError:
+            return jsonify([]), status.HTTP_200_OK
+
+        query = query.filter(Order.status == order_status)
+
+    orders = query.all()
     results = [order.serialize() for order in orders]
     return jsonify(results), status.HTTP_200_OK
 

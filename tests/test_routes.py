@@ -24,7 +24,7 @@ import logging
 from unittest import TestCase
 from wsgi import app
 from service.common import status
-from service.models import db, Order
+from service.models import db, Order, OrderStatus
 from tests.factories import OrderFactory
 from tests.factories import ItemFactory
 
@@ -766,6 +766,96 @@ class TestYourResourceService(TestCase):
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, status.HTTP_200_OK)
+        data = resp.get_json()
+        self.assertEqual(len(data), 0)
+
+    def test_query_orders_by_status(self):
+        """It should return only Orders that match the given status"""
+        orders = self._create_orders(5)
+
+        target_status = orders[0].status
+        matching_orders = [o for o in orders if o.status == target_status]
+
+        resp = self.client.get(
+            f"{BASE_URL}?status={target_status.value.lower()}",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        data = resp.get_json()
+        self.assertEqual(len(data), len(matching_orders))
+        for order in data:
+            self.assertEqual(order["status"], target_status.value)
+
+    def test_query_orders_by_customer_id_and_status(self):
+        """It should return only Orders that match both customer_id and status"""
+        orders = self._create_orders(10)
+
+        target_order = orders[0]
+        target_customer_id = target_order.customer_id
+        target_status = target_order.status
+
+        matching_orders = [
+            o for o in orders
+            if o.customer_id == target_customer_id and o.status == target_status
+        ]
+
+        resp = self.client.get(
+            f"{BASE_URL}?customer_id={target_customer_id}&status={target_status.value.lower()}",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        data = resp.get_json()
+        self.assertEqual(len(data), len(matching_orders))
+        for order in data:
+            self.assertEqual(order["customer_id"], target_customer_id)
+            self.assertEqual(order["status"], target_status.value)
+
+    def test_query_orders_by_status_no_match(self):
+        """It should return an empty list with 200 OK when no Orders match the status"""
+        self._create_orders(3)
+
+        resp = self.client.get(
+            f"{BASE_URL}?status=delivered",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        data = resp.get_json()
+        self.assertEqual(len(data), 0)
+
+    def test_query_orders_by_status_cancelled_alias(self):
+        """It should support 'cancelled' as an alias for CANCELED"""
+        order = OrderFactory()
+        order.status = OrderStatus.CANCELED
+
+        resp = self.client.post(
+            BASE_URL, json=order.serialize(), content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+
+        resp = self.client.get(
+            f"{BASE_URL}?status=cancelled",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
+        data = resp.get_json()
+        self.assertGreaterEqual(len(data), 1)
+        for result in data:
+            self.assertEqual(result["status"], "CANCELED")
+
+    def test_query_orders_by_status_invalid_value(self):
+        """It should return an empty list when the status is invalid"""
+        self._create_orders(3)
+
+        resp = self.client.get(
+            f"{BASE_URL}?status=not-a-real-status",
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_200_OK)
+
         data = resp.get_json()
         self.assertEqual(len(data), 0)
 
