@@ -1,4 +1,0 @@
-mirrors:
-  "cluster-registry:5000":
-    endpoint:
-    - "http://cluster-registry:5000"

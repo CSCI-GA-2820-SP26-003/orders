@@ -1,5 +1,0 @@
-{
-    "insecure-registries": ["cluster-registry:5000"],
-    "builder": { "gc": { "defaultKeepStorage": "20GB", "enabled": true } },
-    "experimental": false
-  }
