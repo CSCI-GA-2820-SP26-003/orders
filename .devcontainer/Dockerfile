@@ -1,5 +1,5 @@
-# Image for a NYU Lab development environment
-FROM quay.io/rofrano/nyu-devops-base:sp26
+# This image has selenium and chrome driver already installed
+FROM quay.io/rofrano/pipeline-selenium:sp26
 
 ARG USERNAME=vscode
 USER root
