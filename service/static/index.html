@@ -1,0 +1,1027 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <title>Orders RESTful Service</title>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/x-icon" href="static/images/newapp-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+    rel="stylesheet">
+  <style>
+    /* ═══════════════════════════════════════════════
+       FOUNDATIONS
+       ═══════════════════════════════════════════════ */
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    :root {
+      --bg: #fafafa;
+      --surface: #ffffff;
+      --border: #e4e4e7;
+      --border-subtle: #f0f0f2;
+      --text: #09090b;
+      --text-2: #52525b;
+      --text-3: #a1a1aa;
+      --text-4: #d4d4d8;
+      --accent: #18181b;
+      --accent-h: #27272a;
+      --red: #dc2626;
+      --red-bg: #fef2f2;
+      --red-border: #fecaca;
+      --green: #16a34a;
+      --green-bg: #f0fdf4;
+      --green-border: #bbf7d0;
+      --blue: #2563eb;
+      --blue-bg: #eff6ff;
+      --blue-border: #bfdbfe;
+      --amber: #d97706;
+      --amber-bg: #fffbeb;
+      --amber-border: #fde68a;
+      --r-sm: 8px;
+      --r-md: 12px;
+      --r-lg: 16px;
+      --sh-1: 0 1px 2px rgba(0, 0, 0, 0.03), 0 1px 3px rgba(0, 0, 0, 0.04);
+      --sh-2: 0 2px 8px rgba(0, 0, 0, 0.04), 0 4px 16px rgba(0, 0, 0, 0.04);
+      --ease: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      -webkit-font-smoothing: antialiased;
+      line-height: 1.5;
+    }
+
+    .shell {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 24px 72px;
+    }
+
+    /* ═══════════════════════════════════════════════
+       ANIMATIONS
+       ═══════════════════════════════════════════════ */
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(12px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes rowIn {
+      from {
+        opacity: 0;
+        transform: translateX(-8px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateX(0);
+      }
+    }
+
+    .a1 {
+      animation: fadeUp .45s var(--ease) both;
+      animation-delay: .04s;
+    }
+
+    .a2 {
+      animation: fadeUp .45s var(--ease) both;
+      animation-delay: .10s;
+    }
+
+    .a3 {
+      animation: fadeUp .45s var(--ease) both;
+      animation-delay: .16s;
+    }
+
+    .a4 {
+      animation: fadeUp .45s var(--ease) both;
+      animation-delay: .22s;
+    }
+
+    /* ═══════════════════════════════════════════════
+       HEADER
+       ═══════════════════════════════════════════════ */
+    .hdr {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      padding: 44px 0 28px;
+    }
+
+    .hdr h1 {
+      font-weight: 800;
+      font-size: 22px;
+      letter-spacing: -0.5px;
+    }
+
+    .hdr p {
+      font-size: 13px;
+      font-weight: 400;
+      color: var(--text-3);
+      margin-top: 1px;
+    }
+
+    .hdr-pill {
+      font-size: 10.5px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+      padding: 5px 12px;
+      border-radius: 100px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-3);
+      box-shadow: var(--sh-1);
+    }
+
+    /* ═══════════════════════════════════════════════
+       TOAST
+       ═══════════════════════════════════════════════ */
+    .toast {
+      position: relative;
+      padding: 11px 16px 11px 20px;
+      min-height: 42px;
+      margin-bottom: 20px;
+      border-radius: var(--r-md);
+      border: 1px solid var(--border);
+      background: var(--surface);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: var(--sh-1);
+      transition: all .3s var(--ease);
+      overflow: hidden;
+    }
+
+    .toast::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 3px;
+      background: var(--text-4);
+      transition: background .3s var(--ease);
+    }
+
+    .toast.t-ok {
+      border-color: var(--green-border);
+      background: var(--green-bg);
+    }
+
+    .toast.t-ok::before {
+      background: var(--green);
+    }
+
+    .toast.t-err {
+      border-color: var(--red-border);
+      background: var(--red-bg);
+    }
+
+    .toast.t-err::before {
+      background: var(--red);
+    }
+
+    .toast-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--text-4);
+      flex-shrink: 0;
+      transition: background .3s var(--ease);
+    }
+
+    .toast.t-ok .toast-dot {
+      background: var(--green);
+    }
+
+    .toast.t-err .toast-dot {
+      background: var(--red);
+    }
+
+    #flash_message {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-2);
+      transition: color .3s var(--ease);
+    }
+
+    .toast.t-ok #flash_message {
+      color: #15803d;
+    }
+
+    .toast.t-err #flash_message {
+      color: var(--red);
+    }
+
+    /* ═══════════════════════════════════════════════
+       CARD
+       ═══════════════════════════════════════════════ */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      padding: 28px 30px 30px;
+      margin-bottom: 20px;
+      box-shadow: var(--sh-1);
+      transition: box-shadow .25s var(--ease);
+    }
+
+    .card:hover {
+      box-shadow: var(--sh-2);
+    }
+
+    .card-hdr {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+
+    .card-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: var(--r-sm);
+      background: linear-gradient(135deg, #f4f4f5, #e9e9ec);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .card-icon svg {
+      width: 14px;
+      height: 14px;
+      stroke: var(--text-2);
+      stroke-width: 2;
+      fill: none;
+    }
+
+    .card-hdr span {
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: -0.2px;
+    }
+
+    /* ═══════════════════════════════════════════════
+       SECTION LABELS
+       ═══════════════════════════════════════════════ */
+    .section-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border-subtle);
+    }
+
+    /* ═══════════════════════════════════════════════
+       FORM FIELDS
+       ═══════════════════════════════════════════════ */
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px 18px;
+    }
+
+    .grid .span {
+      grid-column: 1 / -1;
+    }
+
+    .fg {
+      position: relative;
+    }
+
+    .fg label {
+      display: block;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-3);
+      margin-bottom: 5px;
+      letter-spacing: 0.3px;
+      transition: color .15s var(--ease);
+    }
+
+    .fg:focus-within label {
+      color: var(--text);
+    }
+
+    .fg input,
+    .fg select {
+      width: 100%;
+      padding: 10px 13px;
+      font-size: 13.5px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-weight: 500;
+      color: var(--text);
+      background: var(--surface);
+      border: 1.5px solid var(--border);
+      border-radius: var(--r-sm);
+      outline: none;
+      transition: all .15s var(--ease);
+    }
+
+    .fg input:hover,
+    .fg select:hover {
+      border-color: #d4d4d8;
+    }
+
+    .fg input:focus,
+    .fg select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(24, 24, 27, 0.05);
+    }
+
+    .fg input::placeholder {
+      color: var(--text-4);
+      font-weight: 400;
+    }
+
+    .fg select {
+      cursor: pointer;
+    }
+
+    .fg input[readonly] {
+      background: var(--bg);
+      color: var(--text-3);
+      cursor: default;
+    }
+
+    .fg input[readonly]:focus {
+      border-color: var(--border);
+      box-shadow: none;
+    }
+
+    .id-row {
+      display: flex;
+      align-items: flex-end;
+      gap: 10px;
+      margin-bottom: 22px;
+    }
+
+    .id-row .fg {
+      flex: 1;
+    }
+
+    .id-row .id-btns {
+      display: flex;
+      gap: 6px;
+    }
+
+    /* ═══════════════════════════════════════════════
+       BUTTONS
+       ═══════════════════════════════════════════════ */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      font-size: 12.5px;
+      font-weight: 600;
+      padding: 9px 16px;
+      border-radius: var(--r-sm);
+      border: 1.5px solid transparent;
+      cursor: pointer;
+      transition: all .15s var(--ease);
+      white-space: nowrap;
+      user-select: none;
+    }
+
+    .btn:active {
+      transform: scale(0.96);
+    }
+
+    .btn svg {
+      width: 13px;
+      height: 13px;
+      stroke-width: 2.2;
+      fill: none;
+    }
+
+    .btn-p {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+      box-shadow: var(--sh-1);
+    }
+
+    .btn-p:hover {
+      background: var(--accent-h);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+
+    .btn-p svg {
+      stroke: #fff;
+    }
+
+    .btn-g {
+      background: var(--surface);
+      color: var(--text-2);
+      border-color: var(--border);
+    }
+
+    .btn-g:hover {
+      background: #f4f4f5;
+      border-color: #d4d4d8;
+      color: var(--text);
+    }
+
+    .btn-g svg {
+      stroke: var(--text-3);
+    }
+
+    .btn-g:hover svg {
+      stroke: var(--text-2);
+    }
+
+    .btn-d {
+      background: var(--surface);
+      color: var(--red);
+      border-color: var(--red-border);
+    }
+
+    .btn-d:hover {
+      background: var(--red-bg);
+      border-color: var(--red);
+    }
+
+    .btn-d svg {
+      stroke: var(--red);
+    }
+
+    .btn-u {
+      background: var(--surface);
+      color: var(--text);
+      border-color: var(--accent);
+      box-shadow: var(--sh-1);
+    }
+
+    .btn-u:hover {
+      background: #f4f4f5;
+    }
+
+    .btn-u svg {
+      stroke: var(--text);
+    }
+
+    .btn-cancel {
+      background: var(--surface);
+      color: var(--amber);
+      border-color: var(--amber-border);
+    }
+
+    .btn-cancel:hover {
+      background: var(--amber-bg);
+      border-color: var(--amber);
+    }
+
+    .btn-cancel svg {
+      stroke: var(--amber);
+    }
+
+    .bar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border-subtle);
+    }
+
+    .bar .push {
+      margin-left: auto;
+    }
+
+    /* ═══════════════════════════════════════════════
+       RESULTS TABLE
+       ═══════════════════════════════════════════════ */
+    .res-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-lg);
+      overflow: hidden;
+      box-shadow: var(--sh-1);
+      transition: box-shadow .25s var(--ease);
+    }
+
+    .res-card:hover {
+      box-shadow: var(--sh-2);
+    }
+
+    .res-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 14px 22px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .res-top h2 {
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: -0.1px;
+    }
+
+    .res-count {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-3);
+      background: var(--bg);
+      border: 1px solid var(--border);
+      padding: 2px 10px;
+      border-radius: 100px;
+    }
+
+    #search_results {
+      min-height: 0;
+    }
+
+    #search_results>table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      table-layout: fixed;
+    }
+
+    #search_results thead th {
+      font-weight: 700;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-3);
+      padding: 10px 20px;
+      text-align: left;
+      background: var(--bg);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    /* Column widths */
+    #search_results col.col-chev {
+      width: 40px;
+    }
+
+    #search_results col.col-id {
+      width: 60px;
+    }
+
+    #search_results col.col-cust {
+      width: 22%;
+    }
+
+    #search_results col.col-status {
+      width: 22%;
+    }
+
+    #search_results col.col-items {
+      width: 18%;
+    }
+
+    #search_results col.col-date {
+      width: auto;
+    }
+
+    #search_results tbody td {
+      padding: 11px 20px;
+      color: var(--text);
+      font-weight: 400;
+      border-bottom: 1px solid var(--border-subtle);
+      transition: background .12s var(--ease);
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    #search_results tbody tr:last-child td {
+      border-bottom: none;
+    }
+
+    #search_results tbody tr.order-row {
+      cursor: pointer;
+      transition: background .12s var(--ease);
+      animation: rowIn .25s var(--ease) both;
+    }
+
+    #search_results tbody tr.order-row:hover td {
+      background: #f8f8fa;
+    }
+
+    #search_results tbody tr.order-row.sel td {
+      background: var(--blue-bg);
+    }
+
+    /* ── Chevron indicator ──────────────────────── */
+    .row-chevron {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+      transition: transform .25s var(--ease), background .15s var(--ease);
+    }
+
+    .row-chevron:hover {
+      background: var(--border-subtle);
+    }
+
+    .row-chevron svg {
+      width: 14px;
+      height: 14px;
+      stroke: var(--text-4);
+      stroke-width: 2;
+      fill: none;
+      transition: stroke .2s var(--ease);
+    }
+
+    tr.order-row.expanded .row-chevron {
+      transform: rotate(90deg);
+    }
+
+    tr.order-row.expanded .row-chevron svg {
+      stroke: var(--text-2);
+    }
+
+    /* ── Expanded Item Detail Row ───────────────── */
+    .detail-row td {
+      padding: 0 !important;
+      border-bottom: 1px solid var(--border) !important;
+      background: var(--bg);
+    }
+
+    .detail-wrap {
+      overflow: hidden;
+      /* No CSS animation — jQuery slideToggle handles smooth expand/collapse */
+    }
+
+    .detail-inner {
+      padding: 16px 24px 18px 60px;
+    }
+
+    .detail-inner .items-label {
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 0.8px;
+      text-transform: uppercase;
+      color: var(--text-3);
+      margin-bottom: 10px;
+    }
+
+    #search_results .items-table {
+      width: 100%;
+      table-layout: fixed;
+      border-collapse: collapse;
+      font-size: 12.5px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--r-sm);
+      overflow: hidden;
+    }
+
+    #search_results .items-table th {
+      font-size: 9.5px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-3);
+      padding: 8px 20px;
+      text-align: left;
+      white-space: nowrap;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    #search_results .items-table td {
+      padding: 8px 20px;
+      color: var(--text-2);
+      font-weight: 400;
+      text-align: left;
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    #search_results .items-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .no-items {
+      font-size: 12px;
+      color: var(--text-3);
+      font-style: italic;
+      padding: 4px 0;
+    }
+
+    /* ── Status Badges ──────────────────────────── */
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 10px;
+      border-radius: 100px;
+      letter-spacing: 0.2px;
+    }
+
+    .badge-open {
+      background: var(--blue-bg);
+      color: var(--blue);
+      border: 1px solid var(--blue-border);
+    }
+
+    .badge-shipped {
+      background: var(--amber-bg);
+      color: var(--amber);
+      border: 1px solid var(--amber-border);
+    }
+
+    .badge-delivered {
+      background: var(--green-bg);
+      color: var(--green);
+      border: 1px solid var(--green-border);
+    }
+
+    .badge-canceled {
+      background: var(--red-bg);
+      color: var(--red);
+      border: 1px solid var(--red-border);
+    }
+
+    /* ── Empty State ────────────────────────────── */
+    .empty {
+      text-align: center;
+      padding: 44px 24px;
+    }
+
+    .empty-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 14px;
+    }
+
+    .empty-icon svg {
+      width: 18px;
+      height: 18px;
+      stroke: var(--text-4);
+      stroke-width: 2;
+      fill: none;
+    }
+
+    .empty p {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-2);
+    }
+
+    .empty span {
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--text-3);
+      display: block;
+      margin-top: 2px;
+    }
+
+    /* ═══════════════════════════════════════════════
+       FOOTER
+       ═══════════════════════════════════════════════ */
+    footer {
+      padding: 28px 0;
+      text-align: center;
+    }
+
+    footer p {
+      font-size: 11px;
+      color: var(--text-4);
+      font-weight: 400;
+    }
+
+    /* ═══════════════════════════════════════════════
+       RESPONSIVE
+       ═══════════════════════════════════════════════ */
+    @media (max-width: 640px) {
+      .shell {
+        padding: 0 16px 48px;
+      }
+
+      .card {
+        padding: 20px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .id-row {
+        flex-direction: column;
+        align-items: stretch;
+      }
+
+      .id-row .id-btns {
+        justify-content: flex-start;
+      }
+
+      .bar {
+        flex-wrap: wrap;
+      }
+
+      .bar .push {
+        margin-left: 0;
+        width: 100%;
+        height: 0;
+      }
+
+      .hdr {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+      }
+
+      .detail-inner {
+        padding-left: 20px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="shell">
+
+    <!-- Header -->
+    <div class="hdr a1">
+      <div>
+        <h1>Orders REST API Service</h1>
+        <p>Create, retrieve, update, and manage orders</p>
+      </div>
+      <div class="hdr-pill">v1.0</div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast a2" id="toast_bar">
+      <div class="toast-dot"></div>
+      <span id="flash_message">Ready</span>
+    </div>
+
+    <!-- Form -->
+    <div class="card a3">
+      <div class="card-hdr">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24">
+            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z" />
+            <line x1="3" y1="6" x2="21" y2="6" />
+            <path d="M16 10a4 4 0 01-8 0" />
+          </svg>
+        </div>
+        <span>Manage Orders</span>
+      </div>
+
+      <!-- Lookup -->
+      <div class="section-label">Lookup</div>
+      <div class="id-row">
+        <div class="fg">
+          <label for="order_id">Order ID</label>
+          <input type="text" id="order_id" placeholder="Enter Order ID">
+        </div>
+        <div class="id-btns">
+          <button type="button" class="btn btn-g" id="retrieve-btn">
+            <svg viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+            Retrieve
+          </button>
+          <button type="button" class="btn btn-d" id="delete-btn">
+            <svg viewBox="0 0 24 24">
+              <polyline points="3 6 5 6 21 6" />
+              <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+              <line x1="10" y1="11" x2="10" y2="17" />
+              <line x1="14" y1="11" x2="14" y2="17" />
+            </svg>
+            Delete
+          </button>
+        </div>
+      </div>
+
+      <!-- Order Details -->
+      <div class="section-label">Order Details</div>
+      <div class="grid">
+        <div class="fg">
+          <label for="order_customer_id">Customer ID</label>
+          <input type="text" id="order_customer_id" placeholder="e.g. 12345">
+        </div>
+        <div class="fg">
+          <label for="order_status">Status</label>
+          <select id="order_status">
+            <option value="OPEN" selected>Open</option>
+            <option value="SHIPPED">Shipped</option>
+            <option value="DELIVERED">Delivered</option>
+            <option value="CANCELED">Canceled</option>
+          </select>
+        </div>
+        <div class="fg span">
+          <label for="order_date_created">Date Created</label>
+          <input type="text" id="order_date_created" placeholder="Set automatically" readonly>
+        </div>
+      </div>
+
+      <!-- Actions -->
+      <div class="bar">
+        <button type="button" class="btn btn-g" id="search-btn">
+          <svg viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          Search
+        </button>
+        <button type="button" class="btn btn-g" id="clear-btn">
+          <svg viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+          Clear
+        </button>
+        <button type="button" class="btn btn-cancel" id="cancel-btn">
+          <svg viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" />
+            <line x1="15" y1="9" x2="9" y2="15" />
+            <line x1="9" y1="9" x2="15" y2="15" />
+          </svg>
+          Cancel Order
+        </button>
+        <span class="push"></span>
+        <button type="button" class="btn btn-u" id="update-btn">
+          <svg viewBox="0 0 24 24">
+            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+          </svg>
+          Update
+        </button>
+        <button type="button" class="btn btn-p" id="create-btn">
+          <svg viewBox="0 0 24 24">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          Create
+        </button>
+      </div>
+    </div>
+
+    <!-- Results -->
+    <div class="res-card a4">
+      <div class="res-top">
+        <h2>Search Results</h2>
+        <span class="res-count" id="results_count">0 results</span>
+      </div>
+      <div id="search_results">
+        <div class="empty">
+          <div class="empty-icon">
+            <svg viewBox="0 0 24 24">
+              <circle cx="11" cy="11" r="8" />
+              <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            </svg>
+          </div>
+          <p>No results yet</p>
+          <span>Use Search to find orders by customer ID or status</span>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <p>&copy; NYU DevOps Company 2024</p>
+    </footer>
+  </div>
+
+  <script type="text/javascript" src="static/js/jquery-3.6.0.min.js"></script>
+  <script type="text/javascript" src="static/js/bootstrap.min.js"></script>
+  <script type="text/javascript" src="static/js/rest_api.js"></script>
+</body>
+
+</html>
