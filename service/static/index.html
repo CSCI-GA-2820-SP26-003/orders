@@ -993,6 +993,99 @@
         </button>
       </div>
     </div>
+    <!-- Item Form -->
+    <div class="card a3">
+      <div class="card-hdr">
+        <div class="card-icon">
+          <svg viewBox="0 0 24 24">
+            <path
+              d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z" />
+            <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+            <line x1="12" y1="22.08" x2="12" y2="12" />
+          </svg>
+        </div>
+        <span>Manage Items</span>
+      </div>
+
+      <!-- Item Lookup -->
+      <div class="section-label">Lookup</div>
+      <div class="grid" style="margin-bottom: 22px;">
+        <div class="fg">
+          <label for="item_order_id">Order ID</label>
+          <input type="text" id="item_order_id" placeholder="Enter Order ID">
+        </div>
+        <div class="fg">
+          <label for="item_id">Item ID</label>
+          <input type="text" id="item_id" placeholder="Enter Item ID">
+        </div>
+      </div>
+
+      <!-- Item Details -->
+      <div class="section-label">Item Details</div>
+      <div class="grid">
+        <div class="fg">
+          <label for="item_name">Name</label>
+          <input type="text" id="item_name" placeholder="e.g. Widget">
+        </div>
+        <div class="fg">
+          <label for="item_quantity">Quantity</label>
+          <input type="text" id="item_quantity" placeholder="e.g. 2">
+        </div>
+        <div class="fg">
+          <label for="item_unit_price">Unit Price</label>
+          <input type="text" id="item_unit_price" placeholder="e.g. 9.99">
+        </div>
+      </div>
+
+      <!-- Item Actions -->
+      <div class="bar">
+        <button type="button" class="btn btn-g" id="list-items-btn">
+          <svg viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          List Items
+        </button>
+        <button type="button" class="btn btn-g" id="retrieve-item-btn">
+          <svg viewBox="0 0 24 24">
+            <circle cx="11" cy="11" r="8" />
+            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+          </svg>
+          Retrieve Item
+        </button>
+        <button type="button" class="btn btn-g" id="clear-item-btn">
+          <svg viewBox="0 0 24 24">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+          Clear
+        </button>
+        <button type="button" class="btn btn-d" id="delete-item-btn">
+          <svg viewBox="0 0 24 24">
+            <polyline points="3 6 5 6 21 6" />
+            <path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6" />
+            <line x1="10" y1="11" x2="10" y2="17" />
+            <line x1="14" y1="11" x2="14" y2="17" />
+          </svg>
+          Delete Item
+        </button>
+        <span class="push"></span>
+        <button type="button" class="btn btn-u" id="update-item-btn">
+          <svg viewBox="0 0 24 24">
+            <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+            <path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+          </svg>
+          Update Item
+        </button>
+        <button type="button" class="btn btn-p" id="add-item-btn">
+          <svg viewBox="0 0 24 24">
+            <line x1="12" y1="5" x2="12" y2="19" />
+            <line x1="5" y1="12" x2="19" y2="12" />
+          </svg>
+          Add Item
+        </button>
+      </div>
+    </div>
 
     <!-- Results -->
     <div class="res-card a4">

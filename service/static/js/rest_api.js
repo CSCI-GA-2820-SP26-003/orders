@@ -19,6 +19,23 @@ $(function () {
         $("#order_date_created").val("");
     }
 
+    // Updates the item form with data from the response
+    function update_item_form_data(res) {
+        $("#item_order_id").val(res.order_id);
+        $("#item_id").val(res.id);
+        $("#item_name").val(res.name);
+        $("#item_quantity").val(res.quantity);
+        $("#item_unit_price").val(res.unit_price);
+    }
+
+    // Clears all item form fields
+    function clear_item_form_data() {
+        $("#item_id").val("");
+        $("#item_name").val("");
+        $("#item_quantity").val("");
+        $("#item_unit_price").val("");
+    }
+
     // Updates the flash message area with toast styling
     function flash_message(message) {
         $("#flash_message").empty();
@@ -87,12 +104,24 @@ $(function () {
     }
 
     // ****************************************
-    // Clear the form
+    // Clear the order form
     // ****************************************
 
     $("#clear-btn").click(function () {
         $("#order_id").val("");
         clear_form_data()
+        // Reset toast
+        $("#toast_bar").removeClass("t-ok t-err");
+        $("#flash_message").text("Ready");
+    });
+
+    // ****************************************
+    // Clear the item form
+    // ****************************************
+
+    $("#clear-item-btn").click(function () {
+        $("#item_order_id").val("");
+        clear_item_form_data();
         // Reset toast
         $("#toast_bar").removeClass("t-ok t-err");
         $("#flash_message").text("Ready");
@@ -131,6 +160,31 @@ $(function () {
     // ****************************************
     // TODO: Cancel an Order (Action)
     // #cancel-btn → PUT /orders/${order_id}/cancel
+    // ****************************************
+
+    // ****************************************
+    // TODO: Add an Item to an Order
+    // #add-item-btn → POST /orders/${order_id}/items
+    // ****************************************
+
+    // ****************************************
+    // TODO: Retrieve an Item from an Order
+    // #retrieve-item-btn → GET /orders/${order_id}/items/${item_id}
+    // ****************************************
+
+    // ****************************************
+    // TODO: Update an Item in an Order
+    // #update-item-btn → PUT /orders/${order_id}/items/${item_id}
+    // ****************************************
+
+    // ****************************************
+    // TODO: Delete an Item from an Order
+    // #delete-item-btn → DELETE /orders/${order_id}/items/${item_id}
+    // ****************************************
+
+    // ****************************************
+    // TODO: List Items in an Order
+    // #list-items-btn → GET /orders/${order_id}/items
     // ****************************************
 
 })
