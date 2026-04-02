@@ -25,6 +25,10 @@ For information on Waiting until elements are present in the HTML see:
 import requests
 from compare3 import expect
 from behave import given  # pylint: disable=no-name-in-module
+from behave import given, when, then
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions
 
 # HTTP Return Codes
 HTTP_200_OK = 200
@@ -32,3 +36,108 @@ HTTP_201_CREATED = 201
 HTTP_204_NO_CONTENT = 204
 
 WAIT_TIMEOUT = 60
+ITEM_PREFIX = "item_"
+
+
+######################################################################
+#  B A C K G R O U N D   S E T U P   ( R E S T   A P I )
+######################################################################
+
+
+@given("the following orders")
+def step_impl(context):
+    """Seed orders via the REST API from a Gherkin table"""
+    for row in context.table:
+        res = requests.post(
+            f"{context.base_url}/orders",
+            json={"customer_id": row["customer_id"], "status": row["status"]},
+        )
+        assert res.status_code == HTTP_201_CREATED
+        context.order_id = res.json()["id"]
+
+
+@given("the order has the following items")
+def step_impl(context):
+    """Add items to the saved order via the REST API from a Gherkin table"""
+    for row in context.table:
+        res = requests.post(
+            f"{context.base_url}/orders/{context.order_id}/items",
+            json={
+                "name": row["name"],
+                "quantity": int(row["quantity"]),
+                "unit_price": float(row["unit_price"]),
+            },
+        )
+        assert res.status_code == HTTP_201_CREATED
+        context.item_id = res.json()["id"]
+
+
+######################################################################
+#  D Y N A M I C   I D   S T E P S
+######################################################################
+
+
+@when('I set the "{field}" to the saved order id')
+def step_impl(context, field):
+    """Paste the runtime order ID into an order form field"""
+    element_id = "order_" + field.lower().replace(" ", "_")
+    element = context.driver.find_element(By.ID, element_id)
+    element.clear()
+    element.send_keys(str(context.order_id))
+
+
+@when('I set the item "{field}" to the saved order id')
+def step_impl(context, field):
+    """Paste the runtime order ID into an item form field"""
+    element_id = ITEM_PREFIX + field.lower().replace(" ", "_")
+    element = context.driver.find_element(By.ID, element_id)
+    element.clear()
+    element.send_keys(str(context.order_id))
+
+
+@when('I set the item "{field}" to the saved item id')
+def step_impl(context, field):
+    """Paste the runtime item ID into an item form field"""
+    element_id = ITEM_PREFIX + field.lower().replace(" ", "_")
+    element = context.driver.find_element(By.ID, element_id)
+    element.clear()
+    element.send_keys(str(context.item_id))
+
+
+######################################################################
+#  I T E M   F O R M   I N T E R A C T I O N S
+######################################################################
+
+
+@when('I set the item "{field}" to "{value}"')
+def step_impl(context, field, value):
+    """Type a value into an item form field"""
+    element_id = ITEM_PREFIX + field.lower().replace(" ", "_")
+    element = context.driver.find_element(By.ID, element_id)
+    element.clear()
+    element.send_keys(value)
+
+
+@then('I should see "{value}" in the item "{field}" field')
+def step_impl(context, value, field):
+    """Assert that an item form field contains the expected value"""
+    element_id = ITEM_PREFIX + field.lower().replace(" ", "_")
+    found = WebDriverWait(context.driver, context.wait_seconds).until(
+        expected_conditions.text_to_be_present_in_element_value(
+            (By.ID, element_id), value
+        )
+    )
+    assert found
+
+
+######################################################################
+#  O R D E R   F O R M   H E L P E R S
+######################################################################
+
+
+@when('I clear the "{field}" field')
+def step_impl(context, field):
+    """Clear an order form field to simulate removing required data"""
+    element_id = "order_" + field.lower().replace(" ", "_")
+    element = context.driver.find_element(By.ID, element_id)
+    element.clear()

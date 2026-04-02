@@ -138,9 +138,40 @@ $(function () {
     // ****************************************
 
     // ****************************************
-    // TODO: Update an Order
+    // Update an Order
     // #update-btn → PUT /orders/${order_id}
     // ****************************************
+
+    $("#update-btn").click(function () {
+        let order_id = $("#order_id").val();
+        if (!order_id) {
+            flash_message("Error: Order ID is required for update");
+            return;
+        }
+
+        let data = {
+            "customer_id": parseInt($("#order_customer_id").val()),
+            "status": $("#order_status").val()
+        };
+
+        $("#flash_message").empty();
+
+        let ajax = $.ajax({
+            type: "PUT",
+            url: `/orders/${order_id}`,
+            contentType: "application/json",
+            data: JSON.stringify(data),
+        });
+
+        ajax.done(function (res) {
+            update_form_data(res);
+            flash_message("Success: Order updated");
+        });
+
+        ajax.fail(function (res) {
+            flash_message("Error: " + res.responseJSON.message);
+        });
+    });
 
     // ****************************************
     // TODO: Delete an Order
@@ -173,9 +204,42 @@ $(function () {
     // ****************************************
 
     // ****************************************
-    // TODO: Update an Item in an Order
+    // Update an Item in an Order
     // #update-item-btn → PUT /orders/${order_id}/items/${item_id}
     // ****************************************
+
+    $("#update-item-btn").click(function () {
+        let order_id = $("#item_order_id").val();
+        let item_id = $("#item_id").val();
+        if (!order_id || !item_id) {
+            flash_message("Error: Order ID and Item ID are required for update");
+            return;
+        }
+
+        let data = {
+            "name": $("#item_name").val(),
+            "quantity": parseInt($("#item_quantity").val()),
+            "unit_price": parseFloat($("#item_unit_price").val())
+        };
+
+        $("#flash_message").empty();
+
+        let ajax = $.ajax({
+            type: "PUT",
+            url: `/orders/${order_id}/items/${item_id}`,
+            contentType: "application/json",
+            data: JSON.stringify(data),
+        });
+
+        ajax.done(function (res) {
+            update_item_form_data(res);
+            flash_message("Success: Item updated");
+        });
+
+        ajax.fail(function (res) {
+            flash_message("Error: " + res.responseJSON.message);
+        });
+    });
 
     // ****************************************
     // TODO: Delete an Item from an Order
