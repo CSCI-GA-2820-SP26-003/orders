@@ -30,10 +30,12 @@ logger = logging.getLogger("flask.app")
 
 class OrderStatus(str, Enum):
     """Order Status Enum"""
+
     OPEN = "OPEN"
     SHIPPED = "SHIPPED"
     DELIVERED = "DELIVERED"
     CANCELED = "CANCELED"
+
 
 ######################################################################
 #  O R D E R   M O D E L
@@ -49,15 +51,13 @@ class Order(db.Model, PersistentBase):
     id = db.Column(db.Integer, primary_key=True)
     customer_id = db.Column(db.String(16), nullable=False, index=True)
     # phone number is optional
-    items = db.relationship(
-        "Item", backref="order", passive_deletes=True)
+    items = db.relationship("Item", backref="order", passive_deletes=True)
     status = db.Column(
         db.Enum(OrderStatus, native=False, length=30),
         default=OrderStatus.OPEN,
         nullable=False,
     )
-    date_created = db.Column(
-        db.DateTime, nullable=False, default=datetime.utcnow)
+    date_created = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
 
     def __repr__(self):
         return f"<Order {self.id} items=[{self.items}]>"
@@ -68,8 +68,14 @@ class Order(db.Model, PersistentBase):
             "id": self.id,
             "customer_id": self.customer_id,
             "items": [],
-            "status": self.status.value if isinstance(self.status, OrderStatus) else self.status,
-            "date_created": self.date_created.isoformat() if self.date_created else None,
+            "status": (
+                self.status.value
+                if isinstance(self.status, OrderStatus)
+                else self.status
+            ),
+            "date_created": (
+                self.date_created.isoformat() if self.date_created else None
+            ),
         }
         for item in self.items:
             order["items"].append(item.serialize())
@@ -91,23 +97,24 @@ class Order(db.Model, PersistentBase):
                 raise DataValidationError(f"Invalid status: {status}") from error
 
             # handle inner list of items
-            items_list = data.get("items", [])
-            self.items = []
-            for json_item in items_list:
-                item = Item()
-                item.deserialize(json_item)
-                self.items.append(item)
+            if "items" in data:
+                items_list = data["items"]
+                self.items = []
+                for json_item in items_list:
+                    item = Item()
+                    item.deserialize(json_item)
+                    self.items.append(item)
         except AttributeError as error:
             raise DataValidationError(
-                "Invalid Order attribute: " + error.args[0]) from error
+                "Invalid Order attribute: " + error.args[0]
+            ) from error
         except KeyError as error:
             raise DataValidationError(
                 "Invalid Order: missing " + error.args[0]
             ) from error
         except TypeError as error:
             raise DataValidationError(
-                "Invalid Order: body of request contained bad or no data "
-                + str(error)
+                "Invalid Order: body of request contained bad or no data " + str(error)
             ) from error
 
         return self

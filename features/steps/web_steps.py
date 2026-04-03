@@ -32,7 +32,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions
 
-ID_PREFIX = "pet_"
+ID_PREFIX = "order_"
+
 
 def save_screenshot(context: Any, filename: str) -> None:
     """Takes a snapshot of the web page for debugging and validation
@@ -131,7 +132,7 @@ def step_impl(context: Any, element_name: str) -> None:
 
 @when('I press the "{button}" button')
 def step_impl(context: Any, button: str) -> None:
-    button_id = button.lower().replace(" ", "_") + "-btn"
+    button_id = button.lower().replace(" ", "-") + "-btn"
     context.driver.find_element(By.ID, button_id).click()
 
 
