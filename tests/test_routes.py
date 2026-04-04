@@ -435,6 +435,7 @@ class TestYourResourceService(TestCase):
         self.assertEqual(data["order_id"], order_id)
         self.assertEqual(data["name"], item_data["name"])
         self.assertEqual(data["quantity"], item_data["quantity"])
+
     def test_add_order_item_bad_unit_price(self):
         """It should return 400 when unit price is not a float"""
         order = OrderFactory()
@@ -462,6 +463,7 @@ class TestYourResourceService(TestCase):
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_add_order_item_existing_product_updates_quantity(self):
         """It should UPDATE quantity when adding the same name again"""
         order = OrderFactory()
