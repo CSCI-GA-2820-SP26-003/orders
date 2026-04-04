@@ -252,9 +252,9 @@ def validate_item(data, name, quantity, unit_price):
 
     if unit_price is not None:
         try:
-            unit_price = int(unit_price)
+            unit_price = float(unit_price)
         except (ValueError, TypeError):
-            abort(status.HTTP_400_BAD_REQUEST, "unit_price must be an integer.")
+            abort(status.HTTP_400_BAD_REQUEST, "unit_price must be a float")
 
     if quantity <= 0:
         abort(status.HTTP_400_BAD_REQUEST, "quantity must be a positive integer.")
@@ -285,6 +285,7 @@ def add_order_item(order_id):
     unit_price = data.get("unit_price")
     validate_item(data, name, quantity, unit_price)
     name = name.strip()
+    quantity = int(quantity)
     existing = None
     for it in order.items:
         if getattr(it, "name", None) == name:
