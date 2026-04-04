@@ -39,3 +39,23 @@ Feature: Update an Order via the Web UI
         And I clear the "Customer ID" field
         And I press the "Update" button
         Then I should see the message "Error"
+
+    Scenario: Delete an order
+        When I visit the "Home Page"
+        And I set the "ID" to the saved order id
+        And I press the "Delete" button
+        Then I should see the message "Order successfully deleted!"
+    
+    Scenario: Delete an existing item
+        When I visit the "Home Page"
+        And I set the item "Order ID" to the saved order id
+        And I set the item "ID" to the saved item id
+        And I press the "Delete Item" button
+        Then I should see the message "Item successfully deleted!"
+
+    Scenario: Delete a nonexistent item
+        When I visit the "Home Page"
+        And I set the item "Order ID" to the saved order id
+        And I set the item "ID" to "99999"
+        And I press the "Delete Item" button
+        Then I should see the message "Error"
