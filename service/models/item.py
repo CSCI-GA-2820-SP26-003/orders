@@ -37,9 +37,9 @@ class Item(db.Model, PersistentBase):
     order_id = db.Column(
         db.Integer, db.ForeignKey("order.id", ondelete="CASCADE"), nullable=False, index=True
     )
-    quantity = db.Column(db.Integer)
+    quantity = db.Column(db.Integer, nullable=False)
     unit_price = db.Column(db.Float)
-    name = db.Column(db.String(64))
+    name = db.Column(db.String(64), nullable=False)
 
     def __repr__(self):
         return f"<Item {self.name} id=[{self.id}] Order[{self.order_id}]>"

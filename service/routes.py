@@ -231,7 +231,7 @@ def update_orders(order_id):
 ######################################################################
 
 
-def validate_order(data, name, quantity, unit_price):
+def validate_item(data, name, quantity, unit_price):
     """Helper function to validate order data"""
     if not data:
         abort(status.HTTP_400_BAD_REQUEST, "Request body must be JSON.")
@@ -239,7 +239,7 @@ def validate_order(data, name, quantity, unit_price):
     if "name" not in data or "quantity" not in data:
         abort(
             status.HTTP_400_BAD_REQUEST,
-            "Missing required fields: id and quantity are required.",
+            "Missing required fields: name and quantity are required.",
         )
 
     if not isinstance(name, str) or not name.strip():
@@ -252,9 +252,9 @@ def validate_order(data, name, quantity, unit_price):
 
     if unit_price is not None:
         try:
-            unit_price = int(unit_price)
+            unit_price = float(unit_price)
         except (ValueError, TypeError):
-            abort(status.HTTP_400_BAD_REQUEST, "unit_price must be an integer.")
+            abort(status.HTTP_400_BAD_REQUEST, "unit_price must be a float")
 
     if quantity <= 0:
         abort(status.HTTP_400_BAD_REQUEST, "quantity must be a positive integer.")
@@ -283,8 +283,9 @@ def add_order_item(order_id):
     name = data.get("name")
     quantity = data.get("quantity")
     unit_price = data.get("unit_price")
-    validate_order(data, name, quantity, unit_price)
+    validate_item(data, name, quantity, unit_price)
     name = name.strip()
+    quantity = int(quantity)
     existing = None
     for it in order.items:
         if getattr(it, "name", None) == name:

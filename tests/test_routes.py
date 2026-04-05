@@ -436,6 +436,34 @@ class TestYourResourceService(TestCase):
         self.assertEqual(data["name"], item_data["name"])
         self.assertEqual(data["quantity"], item_data["quantity"])
 
+    def test_add_order_item_bad_unit_price(self):
+        """It should return 400 when unit price is not a float"""
+        order = OrderFactory()
+        order_data = order.serialize()
+        order_data["items"] = []
+
+        resp = self.client.post(
+            BASE_URL, json=order_data, content_type="application/json"
+        )
+        self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
+        new_order = resp.get_json()
+        order_id = new_order["id"]
+
+        item = ItemFactory()
+        item_data = item.serialize()
+
+        item_data["name"] = "xxx"
+        item_data["quantity"] = 2
+        item_data["unit_price"] = "not a valid unit price"
+
+        # POST /orders/{order_id}/items
+        resp = self.client.post(
+            f"{BASE_URL}/{order_id}/items",
+            json={"name": item_data["name"], "quantity": item_data["quantity"], "unit_price": item_data["unit_price"]},
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
     def test_add_order_item_existing_product_updates_quantity(self):
         """It should UPDATE quantity when adding the same name again"""
         order = OrderFactory()

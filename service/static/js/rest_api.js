@@ -17,6 +17,9 @@ $(function () {
         $("#order_customer_id").val("");
         $("#order_status").val("OPEN");
         $("#order_date_created").val("");
+        $("#item_id").val("");
+        $("#order_id").val("");
+        $("#item_order_id").val("");
     }
 
     // Updates the item form with data from the response
@@ -174,9 +177,29 @@ $(function () {
     });
 
     // ****************************************
-    // TODO: Delete an Order
-    // #delete-btn → DELETE /orders/${order_id}
+    // Delete an Order
     // ****************************************
+
+    $("#delete-btn").click(function () {
+        const order_id = $("#order_id").val();
+        if (order_id) {
+            $.ajax({
+                url: `orders/${order_id}`,
+                type: 'DELETE',
+                dataType: 'json',
+                success: function(data) {
+                    flash_message("Order successfully deleted!");
+                    clear_form_data();
+                },
+                error: function(xhr, status, error) {
+                    flash_message(`Error deleting order: ${error}`)
+                }
+            });
+        } 
+        else{
+            flash_message("Please provide an order id!");
+        }
+    })
 
     // ****************************************
     // TODO: List / Query Orders
@@ -242,10 +265,36 @@ $(function () {
     });
 
     // ****************************************
-    // TODO: Delete an Item from an Order
-    // #delete-item-btn → DELETE /orders/${order_id}/items/${item_id}
+    // Delete an Item from an Order
     // ****************************************
 
+    $("#delete-item-btn").click(function () {
+        const order_id = $("#item_order_id").val();
+        const item_id = $("#item_id").val();
+        if (order_id && item_id) {
+            $.ajax({
+                url: `orders/${order_id}/items/${item_id}`,
+                type: 'DELETE',
+                dataType: 'json',
+                success: function(data) {
+                    flash_message("Item successfully deleted!");
+                    clear_form_data();
+                },
+                error: function(xhr, status, error) {
+                    flash_message(`Error deleting item: ${error}`);
+                }
+            });
+        } 
+        else if (!order_id && !item_id) {
+            flash_message("Please provide an order id and item id!");
+        }
+        else if (!order_id) {
+            flash_message("Please provide an order id!");
+        }
+        else{
+            flash_message("Please provide an item id!");
+        }
+    })
     // ****************************************
     // TODO: List Items in an Order
     // #list-items-btn → GET /orders/${order_id}/items
