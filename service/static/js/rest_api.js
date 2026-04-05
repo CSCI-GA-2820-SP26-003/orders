@@ -85,6 +85,42 @@ $(function () {
         });
     }
 
+    // Builds the HTML for the orders results table
+    function build_order_table(orders) {
+        let table = '<table><colgroup>';
+        table += '<col class="col-chev"><col class="col-id"><col class="col-cust">';
+        table += '<col class="col-status"><col class="col-items"><col class="col-date">';
+        table += '</colgroup>';
+        table += '<thead><tr>';
+        table += '<th></th><th>ID</th><th>Customer</th>';
+        table += '<th>Status</th><th>Items</th><th>Created</th>';
+        table += '</tr></thead><tbody>';
+
+        for (let i = 0; i < orders.length; i++) {
+            let order = orders[i];
+            let badgeClass = status_badge_class(order.status);
+            let itemCount = order.items ? order.items.length : 0;
+
+            table += `<tr class="order-row" data-index="${i}">`;
+            table += `<td><span class="row-chevron"><svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></span></td>`;
+            table += `<td style="font-weight:600">${order.id}</td>`;
+            table += `<td>${order.customer_id}</td>`;
+            table += `<td><span class="${badgeClass}">${order.status}</span></td>`;
+            table += `<td>${itemCount}</td>`;
+            table += `<td>${format_date(order.date_created)}</td>`;
+            table += `</tr>`;
+
+            table += `<tr class="detail-row" data-index="${i}" style="display:none;">`;
+            table += `<td colspan="6"><div class="detail-wrap"><div class="detail-inner">`;
+            table += `<p class="items-label">Order Items</p>`;
+            table += build_items_html(order.items);
+            table += `</div></div></td></tr>`;
+        }
+
+        table += '</tbody></table>';
+        return table;
+    }
+
     // Builds the HTML for an order's items sub-table
     function build_items_html(items) {
         if (!items || items.length === 0) {
@@ -187,29 +223,66 @@ $(function () {
                 url: `orders/${order_id}`,
                 type: 'DELETE',
                 dataType: 'json',
-                success: function(data) {
+                success: function (data) {
                     flash_message("Order successfully deleted!");
                     clear_form_data();
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     flash_message(`Error deleting order: ${error}`)
                 }
             });
-        } 
-        else{
+        }
+        else {
             flash_message("Please provide an order id!");
         }
     })
 
     // ****************************************
-    // TODO: List / Query Orders
-    // #search-btn → GET /orders?customer_id=X&status=Y
-    // List = no filters, Query = with filters
-    // Both handled in one click handler
-    // Each order row should have a chevron + hidden detail row
-    // that expands on click to show items via build_items_html()
-    // See test_ui_mock.js for the reference implementation
+    // List / Query Orders
+    // #search-btn → GET /orders?customer_id=X
     // ****************************************
+
+    $("#search-btn").click(function () {
+        let customer_id = $("#order_customer_id").val();
+
+        let queryString = "";
+        if (customer_id) {
+            queryString += "customer_id=" + customer_id;
+        }
+
+        $("#flash_message").empty();
+
+        let ajax = $.ajax({
+            type: "GET",
+            url: `/orders?${queryString}`,
+            contentType: "application/json",
+        });
+
+        ajax.done(function (res) {
+            $("#search_results").html(build_order_table(res));
+            update_result_count(res.length);
+            flash_message("Success: " + res.length + " order(s) found");
+
+            // Bind row click to toggle detail
+            $("#search_results .order-row").click(function () {
+                let idx = $(this).data("index");
+                $(this).toggleClass("expanded");
+                let detailRow = $(`#search_results .detail-row[data-index='${idx}']`);
+                if ($(this).hasClass("expanded")) {
+                    detailRow.show();
+                    detailRow.find(".detail-wrap").slideDown(200);
+                } else {
+                    detailRow.find(".detail-wrap").slideUp(200, function () {
+                        detailRow.hide();
+                    });
+                }
+            });
+        });
+
+        ajax.fail(function (res) {
+            flash_message("Error: " + res.responseJSON.message);
+        });
+    });
 
     // ****************************************
     // TODO: Cancel an Order (Action)
@@ -276,22 +349,22 @@ $(function () {
                 url: `orders/${order_id}/items/${item_id}`,
                 type: 'DELETE',
                 dataType: 'json',
-                success: function(data) {
+                success: function (data) {
                     flash_message("Item successfully deleted!");
                     clear_form_data();
                 },
-                error: function(xhr, status, error) {
+                error: function (xhr, status, error) {
                     flash_message(`Error deleting item: ${error}`);
                 }
             });
-        } 
+        }
         else if (!order_id && !item_id) {
             flash_message("Please provide an order id and item id!");
         }
         else if (!order_id) {
             flash_message("Please provide an order id!");
         }
-        else{
+        else {
             flash_message("Please provide an item id!");
         }
     })
