@@ -1,12 +1,14 @@
-Feature: Update an Order via the Web UI
+Feature: The orders service back-end
     As an eCommerce Manager
-    I need to update existing orders and items through the web interface
-    So that I can correct or modify order and item information
+    I need a RESTful orders service
+    So that I can manage orders for my customers
 
     Background:
         Given the following orders
-            | customer_id | status |
-            | 42          | OPEN   |
+            | customer_id | status  |
+            | 99          | OPEN    |
+            | 42          | SHIPPED |
+            | 42          | OPEN    |
         And the order has the following items
             | name     | quantity | unit_price |
             | Dog Food | 2        | 12.99      |
@@ -45,7 +47,7 @@ Feature: Update an Order via the Web UI
         And I set the "ID" to the saved order id
         And I press the "Delete" button
         Then I should see the message "Order successfully deleted!"
-    
+
     Scenario: Delete an existing item
         When I visit the "Home Page"
         And I set the item "Order ID" to the saved order id
@@ -73,3 +75,19 @@ Feature: Update an Order via the Web UI
         And I set the "ID" to the saved order id
         And I press the "Cancel" button
         Then I should see the message "already cancelled"
+        
+    Scenario: Search orders by Customer ID
+        When I visit the "Home Page"
+        And I set the "Customer ID" to "42"
+        And I press the "Search" button
+        Then I should see the message "Success"
+        And I should see "42" in the results
+        And I should not see "99" in the results
+
+    Scenario: Search with no matching results
+        When I visit the "Home Page"
+        And I set the "Customer ID" to "999"
+        And I press the "Search" button
+        Then I should see the message "Success: 0 order(s) found"
+        And I should not see "42" in the results
+        And I should not see "99" in the results
