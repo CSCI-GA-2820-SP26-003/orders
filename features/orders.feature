@@ -62,6 +62,20 @@ Feature: The orders service back-end
         And I press the "Delete Item" button
         Then I should see the message "Error"
 
+    Scenario: Cancel an existing order
+        Given an order exists with a cancellable status
+        When I visit the "Home Page"
+        And I set the "ID" to the saved order id
+        And I press the "Cancel" button
+        Then I should see "Canceled" in the "Status" dropdown
+
+    Scenario: Cancel an already cancelled order
+        Given an order exists that has already been cancelled
+        When I visit the "Home Page"
+        And I set the "ID" to the saved order id
+        And I press the "Cancel" button
+        Then I should see the message "already cancelled"
+        
     Scenario: Search orders by Customer ID
         When I visit the "Home Page"
         And I set the "Customer ID" to "42"
