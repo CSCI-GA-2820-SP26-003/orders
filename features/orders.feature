@@ -64,12 +64,12 @@ Feature: Update an Order via the Web UI
         Given an order exists with a cancellable status
         When I visit the "Home Page"
         And I set the "ID" to the saved order id
-        And I press the "Cancel Order" button
-        Then the order status should change to "cancelled"
+        And I press the "Cancel" button
+        Then I should see "Canceled" in the "Status" dropdown
 
     Scenario: Cancel an already cancelled order
         Given an order exists that has already been cancelled
         When I visit the "Home Page"
         And I set the "ID" to the saved order id
-        And I press the "Cancel Order" button
-        Then I should see an error message indicating the order cannot be cancelled again
+        And I press the "Cancel" button
+        Then I should see the message "already cancelled"
