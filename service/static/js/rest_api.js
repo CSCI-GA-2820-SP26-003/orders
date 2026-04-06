@@ -212,9 +212,38 @@ $(function () {
     // ****************************************
 
     // ****************************************
-    // TODO: Cancel an Order (Action)
+    // Cancel an Order (Action)
     // #cancel-btn → PUT /orders/${order_id}/cancel
     // ****************************************
+
+    $("#cancel-btn").click(function () {
+        let order_id = $("#order_id").val();
+        if (!order_id) {
+            flash_message("Error: Order ID is required for cancel");
+            return;
+        }
+
+        $("#flash_message").empty();
+
+        let ajax = $.ajax({
+            type: "PUT",
+            url: `/orders/${order_id}/cancel`,
+            contentType: "application/json",
+        });
+
+        ajax.done(function (res) {
+            update_form_data(res);
+            flash_message("Success: Order cancelled");
+        });
+
+        ajax.fail(function (res) {
+            let error_message = "Unable to cancel order";
+            if (res.responseJSON && res.responseJSON.message) {
+                error_message = res.responseJSON.message;
+            }
+            flash_message("Error: " + error_message);
+        });
+    });
 
     // ****************************************
     // TODO: Add an Item to an Order

@@ -59,3 +59,17 @@ Feature: Update an Order via the Web UI
         And I set the item "ID" to "99999"
         And I press the "Delete Item" button
         Then I should see the message "Error"
+
+    Scenario: Cancel an existing order
+        Given an order exists with a cancellable status
+        When I visit the "Home Page"
+        And I set the "ID" to the saved order id
+        And I press the "Cancel Order" button
+        Then the order status should change to "cancelled"
+
+    Scenario: Cancel an already cancelled order
+        Given an order exists that has already been cancelled
+        When I visit the "Home Page"
+        And I set the "ID" to the saved order id
+        And I press the "Cancel Order" button
+        Then I should see an error message indicating the order cannot be cancelled again

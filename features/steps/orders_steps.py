@@ -141,3 +141,54 @@ def step_impl(context, field):
     element_id = "order_" + field.lower().replace(" ", "_")
     element = context.driver.find_element(By.ID, element_id)
     element.clear()
+
+
+######################################################################
+#  C A N C E L   O R D E R   S T E P S
+######################################################################
+
+
+@given("an order exists with a cancellable status")
+def step_impl(context):
+    """Create an order that can be cancelled"""
+    res = requests.post(
+        f"{context.base_url}/orders",
+        json={"customer_id": 42, "status": "OPEN"},
+    )
+    assert res.status_code == HTTP_201_CREATED
+    context.order_id = res.json()["id"]
+
+
+@given("an order exists that has already been cancelled")
+def step_impl(context):
+    """Create an order and cancel it once for setup"""
+    res = requests.post(
+        f"{context.base_url}/orders",
+        json={"customer_id": 42, "status": "OPEN"},
+    )
+    assert res.status_code == HTTP_201_CREATED
+    context.order_id = res.json()["id"]
+
+    cancel_res = requests.put(f"{context.base_url}/orders/{context.order_id}/cancel")
+    assert cancel_res.status_code == HTTP_200_OK
+
+
+@then('the order status should change to "{expected_status}"')
+def step_impl(context, expected_status):
+    """Verify the order status in the dropdown after cancellation"""
+    status_element = context.driver.find_element(By.ID, "order_status")
+    selected_status = status_element.get_attribute("value").lower()
+    normalized_selected = selected_status.replace("canceled", "cancelled")
+    normalized_expected = expected_status.lower().strip()
+    assert normalized_selected == normalized_expected
+
+
+@then("I should see an error message indicating the order cannot be cancelled again")
+def step_impl(context):
+    """Verify user-friendly message for duplicate cancel attempts"""
+    found = WebDriverWait(context.driver, context.wait_seconds).until(
+        expected_conditions.text_to_be_present_in_element(
+            (By.ID, "flash_message"), "already cancelled"
+        )
+    )
+    assert found
