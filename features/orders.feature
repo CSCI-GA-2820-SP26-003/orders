@@ -81,13 +81,13 @@ Feature: The orders service back-end
         And I set the "Customer ID" to "42"
         And I press the "Search" button
         Then I should see the message "Success"
-        And I should see "42" in the results
-        And I should not see "99" in the results
+        And I should see customer id "42" in the results
+        And I should not see customer id "99" in the results
 
     Scenario: Search with no matching results
         When I visit the "Home Page"
         And I set the "Customer ID" to "999"
         And I press the "Search" button
         Then I should see the message "Success: 0 order(s) found"
-        And I should not see "42" in the results
-        And I should not see "99" in the results
+        And I should not see customer id "42" in the results
+        And I should not see customer id "99" in the results

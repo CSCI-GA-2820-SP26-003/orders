@@ -149,8 +149,36 @@ def step_impl(context: Any, name: str) -> None:
 @then('I should not see "{name}" in the results')
 def step_impl(context: Any, name: str) -> None:
     element = context.driver.find_element(By.ID, "search_results")
-    assert name not in element.text
+    assert name not in element.text, f'Unexpectedly found "{name}" in results:\n {element.text}'
 
+@then('I should see customer id "{customer_id}" in the results')
+def step_impl(context: Any, customer_id: str) -> None:
+    customer_values = context.driver.execute_script("""
+        const rows = document.querySelectorAll('#search_results tr.order-row');
+        return Array.from(rows).map(row => {
+            const cols = row.querySelectorAll('td');
+            return cols.length >= 3 ? cols[2].innerText.trim() : null;
+        }).filter(v => v !== null);
+    """)
+
+    assert customer_id in customer_values, (
+        f'"{customer_id}" not found in Customer column: {customer_values}'
+    )
+
+
+@then('I should not see customer id "{customer_id}" in the results')
+def step_impl(context: Any, customer_id: str) -> None:
+    customer_values = context.driver.execute_script("""
+        const rows = document.querySelectorAll('#search_results tr.order-row');
+        return Array.from(rows).map(row => {
+            const cols = row.querySelectorAll('td');
+            return cols.length >= 3 ? cols[2].innerText.trim() : null;
+        }).filter(v => v !== null);
+    """)
+
+    assert customer_id not in customer_values, (
+        f'Unexpectedly found customer id "{customer_id}" in Customer column: {customer_values}'
+    )
 
 @then('I should see the message "{message}"')
 def step_impl(context: Any, message: str) -> None:
