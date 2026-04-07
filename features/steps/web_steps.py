@@ -26,15 +26,13 @@ For information on Waiting until elements are present in the HTML see:
 """
 import re
 import logging
+import requests
 from typing import Any
 from behave import when, then  # pylint: disable=no-name-in-module
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import Select, WebDriverWait
 from selenium.webdriver.support import expected_conditions
-from wsgi import app
-from service.models import db
-from service.models.item import Item
-from service.models.order import Order
+
 
 ID_PREFIX = "order_"
 
@@ -277,12 +275,13 @@ def step_impl(context):
 
 @given("there are no orders")
 def step_impl(context):
-    """Remove all orders and items from the database"""
-    with app.app_context():
-        try:
-            db.session.query(Item).delete()
-            db.session.query(Order).delete()
-            db.session.commit()
-        except Exception:
-            db.session.rollback()
-            raise
+    """Remove all orders through the REST API"""
+    base_url = context.base_url.rstrip("/")
+
+    response = requests.get(f"{base_url}/orders")
+    assert response.status_code == 200, response.text
+
+    orders = response.json()
+    for order in orders:
+        resp = requests.delete(f"{base_url}/orders/{order['id']}")
+        assert resp.status_code == 204, resp.text
