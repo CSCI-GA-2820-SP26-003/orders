@@ -117,3 +117,20 @@ Feature: The orders service back-end
         Then I should see the message "Success: 0 order(s) found"
         And I should not see customer id "42" in the results
         And I should not see customer id "99" in the results
+
+    Scenario: List all orders
+        When I visit the "Home Page"
+        And I clear the "Customer ID" field
+        And I press the "Search" button
+        Then I should see the message "Success"
+        And I should see customer id "42" in the results
+        And I should see customer id "99" in the results
+
+    Scenario: List orders when none exist
+        Given there are no orders
+        When I visit the "Home Page"
+        And I clear the "Customer ID" field
+        And I press the "Search" button
+        Then I should see the message "Success: 0 order(s) found"
+        And I should not see customer id "42" in the results
+        And I should not see customer id "99" in the results
