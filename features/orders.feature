@@ -13,6 +13,32 @@ Feature: The orders service back-end
             | name     | quantity | unit_price |
             | Dog Food | 2        | 12.99      |
 
+     Scenario: Create a new order and add an item
+        When I visit the "Home Page"
+        And I set the "Customer ID" to "1001"
+        And I select "Open" in the "Status" dropdown
+        And I press the "Create" button
+        Then I should see the message "Success: Order created"
+        And I should see a value in the "ID" field
+
+        When I set the item "Order ID" to the saved order id
+        And I set the item "Name" to "Laptop"
+        And I set the item "Quantity" to "2"
+        And I set the item "Unit Price" to "999.99"
+        And I press the "Add Item" button
+        Then I should see the message "Success: Item added"
+        And I should see a value in the item "ID" field
+        And I should see "Laptop" in the item "Name" field
+        And I should see "2" in the item "Quantity" field
+
+    Scenario: Attempt to create an order with missing data
+        When I visit the "Home Page"
+        And I set the "Customer ID" to ""
+        And I select "Open" in the "Status" dropdown
+        And I press the "Create" button
+        Then I should see the message "Error"
+        And the "ID" field should be empty
+
     Scenario: Update an existing order
         When I visit the "Home Page"
         And I set the "ID" to the saved order id
