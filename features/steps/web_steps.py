@@ -229,6 +229,11 @@ def step_impl(context: Any, element_name: str, text_string: str) -> None:
     element.send_keys(text_string)
 
 
+##################################################################
+# These two functions check the Customer ID column in search results
+##################################################################
+
+
 @then('I should see a value in the "{element_name}" field')
 def step_impl(context: Any, element_name: str) -> None:
     element_id = ID_PREFIX + element_name.lower().replace(" ", "_")
@@ -251,6 +256,11 @@ def step_impl(context: Any, element_name: str) -> None:
     assert (
         value is not None and value.strip() != ""
     ), f'Expected a value in item "{element_name}" field, but found: {value}'
+
+
+##################################################################
+# This function clears the Customer ID field for validation tests
+##################################################################
 
 
 @when('I set the "Customer ID" to ""')
