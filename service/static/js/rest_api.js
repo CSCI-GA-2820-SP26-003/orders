@@ -175,6 +175,59 @@ $(function () {
     // TODO: Retrieve an Order
     // #retrieve-btn → GET /orders/${order_id}
     // ****************************************
+    $("#retrieve-btn").click(function () {
+        let order_id = $("#order_id").val();
+
+        if (!order_id) {
+            flash_message("Error: Order ID is required for retrieve");
+            return;
+        }
+
+        $("#flash_message").empty();
+
+        let ajax = $.ajax({
+            type: "GET",
+            url: `/orders/${order_id}`,
+            contentType: "application/json",
+        });
+
+        ajax.done(function (res) {
+            update_form_data(res);
+
+            // Show the retrieved order in the results area too
+            $("#search_results").html(build_order_table([res]));
+            update_result_count(1);
+
+            flash_message("Success: Order retrieved");
+        });
+
+        ajax.fail(function (res) {
+            clear_form_data();
+            $("#order_id").val(order_id);
+
+            let error_message = "Order not found";
+            if (res.responseJSON && res.responseJSON.message) {
+                error_message = res.responseJSON.message;
+            }
+
+            $("#search_results").html(`
+                <div class="empty">
+                    <div class="empty-icon">
+                        <svg viewBox="0 0 24 24">
+                            <circle cx="11" cy="11" r="8" />
+                            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                        </svg>
+                    </div>
+                    <p>Order not found</p>
+                    <span>${error_message}</span>
+                </div>
+            `);
+            update_result_count(0);
+            flash_message("Error: " + error_message);
+        });
+    });
+
+
 
     // ****************************************
     // Update an Order
