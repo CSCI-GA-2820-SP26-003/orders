@@ -167,9 +167,38 @@ $(function () {
     });
 
     // ****************************************
-    // TODO: Create an Order
+    // Create an Order
     // #create-btn → POST /orders
     // ****************************************
+
+    $("#create-btn").click(function () {
+        let data = {
+            "customer_id": parseInt($("#order_customer_id").val()),
+            "status": $("#order_status").val()
+        };
+
+        $("#flash_message").empty();
+
+        let ajax = $.ajax({
+            type: "POST",
+            url: "/orders",
+            contentType: "application/json",
+            data: JSON.stringify(data),
+        });
+
+        ajax.done(function (res) {
+            update_form_data(res);
+            flash_message("Success: Order created");
+        });
+
+        ajax.fail(function (res) {
+            if (res.responseJSON && res.responseJSON.message) {
+                flash_message("Error: " + res.responseJSON.message);
+            } else {
+                flash_message("Error: Unable to create order");
+            }
+        });
+    });
 
     // ****************************************
     // TODO: Retrieve an Order
@@ -372,9 +401,45 @@ $(function () {
     });
 
     // ****************************************
-    // TODO: Add an Item to an Order
+    // Add an Item to an Order
     // #add-item-btn → POST /orders/${order_id}/items
     // ****************************************
+
+     $("#add-item-btn").click(function () {
+        let order_id = $("#item_order_id").val();
+        if (!order_id) {
+            flash_message("Error: Order ID is required to add an item");
+            return;
+        }
+
+        let data = {
+            "name": $("#item_name").val(),
+            "quantity": parseInt($("#item_quantity").val()),
+            "unit_price": parseFloat($("#item_unit_price").val())
+        };
+
+        $("#flash_message").empty();
+
+        let ajax = $.ajax({
+            type: "POST",
+            url: `/orders/${order_id}/items`,
+            contentType: "application/json",
+            data: JSON.stringify(data),
+        });
+
+        ajax.done(function (res) {
+            update_item_form_data(res);
+            flash_message("Success: Item added");
+        });
+
+        ajax.fail(function (res) {
+            if (res.responseJSON && res.responseJSON.message) {
+                flash_message("Error: " + res.responseJSON.message);
+            } else {
+                flash_message("Error: Unable to add item");
+            }
+        });
+    });
 
     // ****************************************
     // TODO: Retrieve an Item from an Order

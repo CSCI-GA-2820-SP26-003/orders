@@ -149,36 +149,44 @@ def step_impl(context: Any, name: str) -> None:
 @then('I should not see "{name}" in the results')
 def step_impl(context: Any, name: str) -> None:
     element = context.driver.find_element(By.ID, "search_results")
-    assert name not in element.text, f'Unexpectedly found "{name}" in results:\n {element.text}'
+    assert (
+        name not in element.text
+    ), f'Unexpectedly found "{name}" in results:\n {element.text}'
+
 
 @then('I should see customer id "{customer_id}" in the results')
 def step_impl(context: Any, customer_id: str) -> None:
-    customer_values = context.driver.execute_script("""
+    customer_values = context.driver.execute_script(
+        """
         const rows = document.querySelectorAll('#search_results tr.order-row');
         return Array.from(rows).map(row => {
             const cols = row.querySelectorAll('td');
             return cols.length >= 3 ? cols[2].innerText.trim() : null;
         }).filter(v => v !== null);
-    """)
-
-    assert customer_id in customer_values, (
-        f'"{customer_id}" not found in Customer column: {customer_values}'
+    """
     )
+
+    assert (
+        customer_id in customer_values
+    ), f'"{customer_id}" not found in Customer column: {customer_values}'
 
 
 @then('I should not see customer id "{customer_id}" in the results')
 def step_impl(context: Any, customer_id: str) -> None:
-    customer_values = context.driver.execute_script("""
+    customer_values = context.driver.execute_script(
+        """
         const rows = document.querySelectorAll('#search_results tr.order-row');
         return Array.from(rows).map(row => {
             const cols = row.querySelectorAll('td');
             return cols.length >= 3 ? cols[2].innerText.trim() : null;
         }).filter(v => v !== null);
-    """)
-
-    assert customer_id not in customer_values, (
-        f'Unexpectedly found customer id "{customer_id}" in Customer column: {customer_values}'
+    """
     )
+
+    assert (
+        customer_id not in customer_values
+    ), f'Unexpectedly found customer id "{customer_id}" in Customer column: {customer_values}'
+
 
 @then('I should see the message "{message}"')
 def step_impl(context: Any, message: str) -> None:
@@ -219,3 +227,35 @@ def step_impl(context: Any, element_name: str, text_string: str) -> None:
     )
     element.clear()
     element.send_keys(text_string)
+
+
+@then('I should see a value in the "{element_name}" field')
+def step_impl(context: Any, element_name: str) -> None:
+    element_id = ID_PREFIX + element_name.lower().replace(" ", "_")
+    element = WebDriverWait(context.driver, context.wait_seconds).until(
+        expected_conditions.presence_of_element_located((By.ID, element_id))
+    )
+    value = element.get_attribute("value")
+    assert (
+        value is not None and value.strip() != ""
+    ), f'Expected a value in "{element_name}" field, but found: {value}'
+
+
+@then('I should see a value in the item "{element_name}" field')
+def step_impl(context: Any, element_name: str) -> None:
+    element_id = "item_" + element_name.lower().replace(" ", "_")
+    element = WebDriverWait(context.driver, context.wait_seconds).until(
+        expected_conditions.presence_of_element_located((By.ID, element_id))
+    )
+    value = element.get_attribute("value")
+    assert (
+        value is not None and value.strip() != ""
+    ), f'Expected a value in item "{element_name}" field, but found: {value}'
+
+
+@when('I set the "Customer ID" to ""')
+def step_impl(context):
+    element = WebDriverWait(context.driver, context.wait_seconds).until(
+        expected_conditions.presence_of_element_located((By.ID, "order_customer_id"))
+    )
+    element.clear()
