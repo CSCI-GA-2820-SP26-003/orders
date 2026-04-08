@@ -15,7 +15,7 @@ $(function () {
     /// Clears all form fields
     function clear_form_data() {
         $("#order_customer_id").val("");
-        $("#order_status").val("OPEN");
+        $("#order_status").val("");
         $("#order_date_created").val("");
         $("#order_id").val("");
     }
@@ -124,7 +124,10 @@ $(function () {
         if (!items || items.length === 0) {
             return '<p class="no-items">No items in this order</p>';
         }
-        let html = '<table class="items-table">';
+        let html = '<table class="items-table"><colgroup>';
+        html += '<col style="width:20%"><col style="width:35%">';
+        html += '<col style="width:15%"><col style="width:30%">';
+        html += '</colgroup>';
         html += '<thead><tr><th>Item ID</th><th>Name</th><th>Qty</th><th>Unit Price</th></tr></thead>';
         html += '<tbody>';
         for (let i = 0; i < items.length; i++) {
@@ -172,7 +175,7 @@ $(function () {
     $("#create-btn").click(function () {
         let data = {
             "customer_id": parseInt($("#order_customer_id").val()),
-            "status": $("#order_status").val()
+            "status": $("#order_status").val() || "OPEN"
         };
 
         $("#flash_message").empty();
@@ -186,7 +189,8 @@ $(function () {
 
         ajax.done(function (res) {
             update_form_data(res);
-            flash_message("Success: Order created");
+            $("#item_order_id").val(res.id);
+            flash_message("Success: Order created (ID: " + res.id + ")");
         });
 
         ajax.fail(function (res) {
@@ -225,6 +229,8 @@ $(function () {
             $("#search_results").html(build_order_table([res]));
             update_result_count(1);
 
+            $("#results_title").text("Order #" + res.id);
+            document.querySelector('.res-card').scrollIntoView({ behavior: 'smooth' });
             flash_message("Success: Order retrieved");
         });
 
@@ -270,7 +276,7 @@ $(function () {
 
         let data = {
             "customer_id": parseInt($("#order_customer_id").val()),
-            "status": $("#order_status").val()
+            "status": $("#order_status").val() || "OPEN"
         };
 
         $("#flash_message").empty();
@@ -324,11 +330,16 @@ $(function () {
 
     $("#search-btn").click(function () {
         let customer_id = $("#order_customer_id").val();
+        let status = $("#order_status").val();
 
-        let queryString = "";
+        let params = [];
         if (customer_id) {
-            queryString += "customer_id=" + customer_id;
+            params.push("customer_id=" + customer_id);
         }
+        if (status) {
+            params.push("status=" + status);
+        }
+        let queryString = params.join("&");
 
         $("#flash_message").empty();
 
@@ -339,6 +350,7 @@ $(function () {
         });
 
         ajax.done(function (res) {
+            $("#results_title").text("Orders");
             $("#search_results").html(build_order_table(res));
             update_result_count(res.length);
             flash_message("Success: " + res.length + " order(s) found");
@@ -357,10 +369,16 @@ $(function () {
                     });
                 }
             });
+
+            document.querySelector('.res-card').scrollIntoView({ behavior: 'smooth' });
         });
 
         ajax.fail(function (res) {
-            flash_message("Error: " + res.responseJSON.message);
+            let error_message = "Unable to search orders";
+            if (res.responseJSON && res.responseJSON.message) {
+                error_message = res.responseJSON.message;
+            }
+            flash_message("Error: " + error_message);
         });
     });
 
@@ -427,7 +445,7 @@ $(function () {
 
         ajax.done(function (res) {
             update_item_form_data(res);
-            flash_message("Success: Item added");
+            flash_message("Success: Item added (ID: " + res.id + ")");
         });
 
         ajax.fail(function (res) {
@@ -569,11 +587,12 @@ $(function () {
             let html = build_items_html(res);
             $("#search_results").html(
                 '<div style="padding: 20px 24px;">' +
-                '<p class="items-label">Items for Order ' + order_id + '</p>' +
                 html +
                 '</div>'
             );
             update_result_count(res.length);
+            $("#results_title").text("Items for Order #" + order_id);
+            document.querySelector('.res-card').scrollIntoView({ behavior: 'smooth' });
             flash_message("Success: " + res.length + " item(s) found");
         });
 
