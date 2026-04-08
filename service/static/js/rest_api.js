@@ -17,9 +17,7 @@ $(function () {
         $("#order_customer_id").val("");
         $("#order_status").val("OPEN");
         $("#order_date_created").val("");
-        $("#item_id").val("");
         $("#order_id").val("");
-        $("#item_order_id").val("");
     }
 
     // Updates the item form with data from the response
@@ -405,7 +403,7 @@ $(function () {
     // #add-item-btn → POST /orders/${order_id}/items
     // ****************************************
 
-     $("#add-item-btn").click(function () {
+    $("#add-item-btn").click(function () {
         let order_id = $("#item_order_id").val();
         if (!order_id) {
             flash_message("Error: Order ID is required to add an item");
