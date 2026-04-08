@@ -311,6 +311,12 @@
       gap: 14px 18px;
     }
 
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 14px 18px;
+    }
+
     .grid .span {
       grid-column: 1 / -1;
     }
@@ -377,6 +383,14 @@
     .fg input[readonly]:focus {
       border-color: var(--border);
       box-shadow: none;
+    }
+
+    .fg .hint {
+      font-size: 10.5px;
+      font-weight: 400;
+      color: var(--text-3);
+      margin-top: 4px;
+      font-style: italic;
     }
 
     .id-row {
@@ -583,17 +597,17 @@
       border-bottom: 1px solid var(--border-subtle);
     }
 
-    /* Column widths */
+    /* Column widths — widened ID column */
     #search_results col.col-chev {
       width: 40px;
     }
 
     #search_results col.col-id {
-      width: 60px;
+      width: 80px;
     }
 
     #search_results col.col-cust {
-      width: 22%;
+      width: 20%;
     }
 
     #search_results col.col-status {
@@ -601,7 +615,7 @@
     }
 
     #search_results col.col-items {
-      width: 18%;
+      width: 14%;
     }
 
     #search_results col.col-date {
@@ -677,7 +691,6 @@
 
     .detail-wrap {
       overflow: hidden;
-      /* No CSS animation — jQuery slideToggle handles smooth expand/collapse */
     }
 
     .detail-inner {
@@ -840,6 +853,10 @@
         grid-template-columns: 1fr;
       }
 
+      .grid-3 {
+        grid-template-columns: 1fr;
+      }
+
       .id-row {
         flex-direction: column;
         align-items: stretch;
@@ -890,7 +907,7 @@
       <span id="flash_message">Ready</span>
     </div>
 
-    <!-- Form -->
+    <!-- Order Form -->
     <div class="card a3">
       <div class="card-hdr">
         <div class="card-icon">
@@ -916,7 +933,7 @@
               <circle cx="11" cy="11" r="8" />
               <line x1="21" y1="21" x2="16.65" y2="16.65" />
             </svg>
-            Retrieve
+            Get Order
           </button>
           <button type="button" class="btn btn-d" id="delete-btn">
             <svg viewBox="0 0 24 24">
@@ -932,7 +949,7 @@
 
       <!-- Order Details -->
       <div class="section-label">Order Details</div>
-      <div class="grid">
+      <div class="grid-3">
         <div class="fg">
           <label for="order_customer_id">Customer ID</label>
           <input type="text" id="order_customer_id" placeholder="e.g. 12345">
@@ -940,13 +957,14 @@
         <div class="fg">
           <label for="order_status">Status</label>
           <select id="order_status">
-            <option value="OPEN" selected>Open</option>
+            <option value="" selected>Any</option>
+            <option value="OPEN">Open</option>
             <option value="SHIPPED">Shipped</option>
             <option value="DELIVERED">Delivered</option>
             <option value="CANCELED">Canceled</option>
           </select>
         </div>
-        <div class="fg span">
+        <div class="fg">
           <label for="order_date_created">Date Created</label>
           <input type="text" id="order_date_created" placeholder="Set automatically" readonly>
         </div>
@@ -959,7 +977,7 @@
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
-          Search
+          Search Orders
         </button>
         <button type="button" class="btn btn-g" id="clear-btn">
           <svg viewBox="0 0 24 24">
@@ -993,6 +1011,7 @@
         </button>
       </div>
     </div>
+
     <!-- Item Form -->
     <div class="card a3">
       <div class="card-hdr">
@@ -1013,6 +1032,7 @@
         <div class="fg">
           <label for="item_order_id">Order ID</label>
           <input type="text" id="item_order_id" placeholder="Enter Order ID">
+          <div class="hint">Auto-fills when you create an order above</div>
         </div>
         <div class="fg">
           <label for="item_id">Item ID</label>
@@ -1041,17 +1061,21 @@
       <div class="bar">
         <button type="button" class="btn btn-g" id="list-items-btn">
           <svg viewBox="0 0 24 24">
-            <circle cx="11" cy="11" r="8" />
-            <line x1="21" y1="21" x2="16.65" y2="16.65" />
+            <line x1="8" y1="6" x2="21" y2="6" />
+            <line x1="8" y1="12" x2="21" y2="12" />
+            <line x1="8" y1="18" x2="21" y2="18" />
+            <line x1="3" y1="6" x2="3.01" y2="6" />
+            <line x1="3" y1="12" x2="3.01" y2="12" />
+            <line x1="3" y1="18" x2="3.01" y2="18" />
           </svg>
-          List Items
+          Show All Items
         </button>
         <button type="button" class="btn btn-g" id="retrieve-item-btn">
           <svg viewBox="0 0 24 24">
             <circle cx="11" cy="11" r="8" />
             <line x1="21" y1="21" x2="16.65" y2="16.65" />
           </svg>
-          Retrieve Item
+          Get Item
         </button>
         <button type="button" class="btn btn-g" id="clear-item-btn">
           <svg viewBox="0 0 24 24">
@@ -1090,7 +1114,7 @@
     <!-- Results -->
     <div class="res-card a4">
       <div class="res-top">
-        <h2>Search Results</h2>
+        <h2 id="results_title">Results</h2>
         <span class="res-count" id="results_count">0 results</span>
       </div>
       <div id="search_results">
@@ -1102,13 +1126,13 @@
             </svg>
           </div>
           <p>No results yet</p>
-          <span>Use Search to find orders by customer ID or status</span>
+          <span>Use Search Orders or Show All Items to see results here</span>
         </div>
       </div>
     </div>
 
     <footer>
-      <p>&copy; NYU DevOps Company 2024</p>
+      <p>&copy; NYU DevOps Company 2026</p>
     </footer>
   </div>
 
