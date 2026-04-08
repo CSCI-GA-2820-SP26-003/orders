@@ -17,9 +17,7 @@ $(function () {
         $("#order_customer_id").val("");
         $("#order_status").val("OPEN");
         $("#order_date_created").val("");
-        $("#item_id").val("");
         $("#order_id").val("");
-        $("#item_order_id").val("");
     }
 
     // Updates the item form with data from the response
@@ -201,7 +199,7 @@ $(function () {
     });
 
     // ****************************************
-    // TODO: Retrieve an Order
+    // Retrieve an Order
     // #retrieve-btn → GET /orders/${order_id}
     // ****************************************
     $("#retrieve-btn").click(function () {
@@ -405,7 +403,7 @@ $(function () {
     // #add-item-btn → POST /orders/${order_id}/items
     // ****************************************
 
-     $("#add-item-btn").click(function () {
+    $("#add-item-btn").click(function () {
         let order_id = $("#item_order_id").val();
         if (!order_id) {
             flash_message("Error: Order ID is required to add an item");
@@ -442,9 +440,40 @@ $(function () {
     });
 
     // ****************************************
-    // TODO: Retrieve an Item from an Order
+    // Retrieve an Item from an Order
     // #retrieve-item-btn → GET /orders/${order_id}/items/${item_id}
     // ****************************************
+
+    $("#retrieve-item-btn").click(function () {
+        let order_id = $("#item_order_id").val();
+        let item_id = $("#item_id").val();
+        if (!order_id || !item_id) {
+            flash_message("Error: Order ID and Item ID are required for retrieve");
+            return;
+        }
+
+        $("#flash_message").empty();
+
+        let ajax = $.ajax({
+            type: "GET",
+            url: `/orders/${order_id}/items/${item_id}`,
+            contentType: "application/json",
+        });
+
+        ajax.done(function (res) {
+            update_item_form_data(res);
+            flash_message("Success: Item retrieved");
+        });
+
+        ajax.fail(function (res) {
+            clear_item_form_data();
+            let error_message = "Item not found";
+            if (res.responseJSON && res.responseJSON.message) {
+                error_message = res.responseJSON.message;
+            }
+            flash_message("Error: " + error_message);
+        });
+    });
 
     // ****************************************
     // Update an Item in an Order
@@ -515,9 +544,46 @@ $(function () {
             flash_message("Please provide an item id!");
         }
     })
+
     // ****************************************
-    // TODO: List Items in an Order
+    // List Items in an Order
     // #list-items-btn → GET /orders/${order_id}/items
     // ****************************************
+
+    $("#list-items-btn").click(function () {
+        let order_id = $("#item_order_id").val();
+        if (!order_id) {
+            flash_message("Error: Order ID is required to list items");
+            return;
+        }
+
+        $("#flash_message").empty();
+
+        let ajax = $.ajax({
+            type: "GET",
+            url: `/orders/${order_id}/items`,
+            contentType: "application/json",
+        });
+
+        ajax.done(function (res) {
+            let html = build_items_html(res);
+            $("#search_results").html(
+                '<div style="padding: 20px 24px;">' +
+                '<p class="items-label">Items for Order ' + order_id + '</p>' +
+                html +
+                '</div>'
+            );
+            update_result_count(res.length);
+            flash_message("Success: " + res.length + " item(s) found");
+        });
+
+        ajax.fail(function (res) {
+            let error_message = "Unable to list items";
+            if (res.responseJSON && res.responseJSON.message) {
+                error_message = res.responseJSON.message;
+            }
+            flash_message("Error: " + error_message);
+        });
+    });
 
 })
