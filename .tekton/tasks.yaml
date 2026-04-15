@@ -1,0 +1,37 @@
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: pytest
+spec:
+  workspaces:
+    - name: source
+  sidecars:
+    - name: postgres
+      image: postgres:15-alpine
+      env:
+        - name: POSTGRES_USER
+          value: postgres
+        - name: POSTGRES_PASSWORD
+          value: postgres
+        - name: POSTGRES_DB
+          value: testdb
+      readinessProbe:
+        exec:
+          command: ["pg_isready", "-U", "postgres"]
+        initialDelaySeconds: 5
+        periodSeconds: 5
+  steps:
+    - name: run-tests
+      image: python:3.12-slim
+      workingDir: $(workspaces.source.path)
+      env:
+        - name: DATABASE_URI
+          value: "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
+      script: |
+        script: |
+        #!/bin/bash
+        pip install --quiet pipenv
+        pipenv install --dev --system
+        flask db-create
+        export RETRY_COUNT=1
+        python -m pytest --pspec --cov=service --cov-fail-under=95 --disable-warnings --tb=short

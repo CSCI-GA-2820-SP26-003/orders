@@ -17,33 +17,33 @@ spec:
         - name: CRT_FILENAME
           value: ca-bundle.crt
         - name: HTTP_PROXY
-          value: ''
+          value: ""
         - name: HTTPS_PROXY
-          value: ''
+          value: ""
         - name: NO_PROXY
-          value: ''
+          value: ""
         - name: SUBDIRECTORY
-          value: ''
+          value: ""
         - name: USER_HOME
           value: /home/git
         - name: DELETE_EXISTING
-          value: 'true'
+          value: "true"
         - name: VERBOSE
-          value: 'false'
+          value: "false"
         - name: SSL_VERIFY
-          value: 'true'
+          value: "true"
         - name: URL
           value: $(params.GIT_REPO)
         - name: REVISION
           value: $(params.GIT_REF)
         - name: REFSPEC
-          value: ''
+          value: ""
         - name: SUBMODULES
-          value: 'true'
+          value: "true"
         - name: DEPTH
-          value: '1'
+          value: "1"
         - name: SPARSE_CHECKOUT_DIRECTORIES
-          value: ''
+          value: ""
       taskRef:
         params:
           - name: kind
@@ -55,6 +55,14 @@ spec:
         resolver: cluster
       workspaces:
         - name: output
+          workspace: pipeline-workspace
+    - name: unit-test
+      taskRef:
+        name: pytest
+      runAfter:
+        - git-clone
+      workspaces:
+        - name: source
           workspace: pipeline-workspace
   workspaces:
     - name: pipeline-workspace
