@@ -72,5 +72,22 @@ spec:
       workspaces:
         - name: source
           workspace: pipeline-workspace
+
+    - name: build-image
+    taskRef:
+      name: buildah
+    runAfter:
+      - unit-test
+      - lint
+    params:
+      - name: IMAGE
+        value: image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/orders:latest
+      - name: DOCKERFILE
+        value: ./Dockerfile
+      - name: CONTEXT
+        value: .
+    workspaces:
+      - name: source
+        workspace: pipeline-workspace
   workspaces:
     - name: pipeline-workspace
