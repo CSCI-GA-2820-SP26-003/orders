@@ -7,7 +7,7 @@ spec:
     - name: git-repo-url
       value: $(body.repository.clone_url)
     - name: git-revision
-      value: master
+      value: $(body.after)
 ---
 apiVersion: triggers.tekton.dev/v1beta1
 kind: TriggerBinding
@@ -18,4 +18,4 @@ spec:
     - name: git-repo-url
       value: $(body.pull_request.base.repo.clone_url)
     - name: git-revision
-      value: $(body.pull_request.base.ref)
+      value: $(body.pull_request.merge_commit_sha)
