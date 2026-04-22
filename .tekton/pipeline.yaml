@@ -1,14 +1,14 @@
 apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
-  name: pvc-pipeline
+  name: orders-pipeline
+  namespace: barryzzzz-dev
 spec:
   params:
-    - description: The URL to the git repo
+    - description: The git repository URL to clone from
       name: GIT_REPO
       type: string
-    - default: master
-      description: The reference (branch or ref)
+    - description: The reference (branch or ref)
       name: GIT_REF
       type: string
   tasks:
@@ -56,6 +56,7 @@ spec:
       workspaces:
         - name: output
           workspace: pipeline-workspace
+
     - name: unit-test
       taskRef:
         name: pytest
@@ -64,6 +65,7 @@ spec:
       workspaces:
         - name: source
           workspace: pipeline-workspace
+
     - name: lint
       taskRef:
         name: pylint
@@ -74,20 +76,21 @@ spec:
           workspace: pipeline-workspace
 
     - name: build-image
-    taskRef:
-      name: buildah
-    runAfter:
-      - unit-test
-      - lint
-    params:
-      - name: IMAGE
-        value: image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/orders:latest
-      - name: DOCKERFILE
-        value: ./Dockerfile
-      - name: CONTEXT
-        value: .
-    workspaces:
-      - name: source
-        workspace: pipeline-workspace
+      taskRef:
+        name: buildah
+      runAfter:
+        - unit-test
+        - lint
+      params:
+        - name: IMAGE
+          value: image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/orders:latest
+        - name: DOCKERFILE
+          value: ./Dockerfile
+        - name: CONTEXT
+          value: .
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+
   workspaces:
     - name: pipeline-workspace
