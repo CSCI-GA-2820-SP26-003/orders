@@ -31,7 +31,7 @@ from tests.factories import ItemFactory
 DATABASE_URI = os.getenv(
     "DATABASE_URI", "postgresql+psycopg://postgres:postgres@localhost:5432/testdb"
 )
-BASE_URL = "/orders"
+BASE_URL = "/api/orders"
 
 
 ######################################################################
@@ -422,7 +422,7 @@ class TestYourResourceService(TestCase):
         item_data["quantity"] = 2
         item_data["unit_price"] = 0
 
-        # POST /orders/{order_id}/items
+        # POST /api/orders/{order_id}/items
         resp = self.client.post(
             f"{BASE_URL}/{order_id}/items",
             json={"name": item_data["name"], "quantity": item_data["quantity"]},
@@ -456,7 +456,7 @@ class TestYourResourceService(TestCase):
         item_data["quantity"] = 2
         item_data["unit_price"] = "not a valid unit price"
 
-        # POST /orders/{order_id}/items
+        # POST /api/orders/{order_id}/items
         resp = self.client.post(
             f"{BASE_URL}/{order_id}/items",
             json={"name": item_data["name"], "quantity": item_data["quantity"], "unit_price": item_data["unit_price"]},
@@ -654,7 +654,7 @@ class TestYourResourceService(TestCase):
         self.assertGreaterEqual(len(new_order["items"]), 1)
         item_id = new_order["items"][0]["id"]
 
-        # DELETE /orders/{order_id}/items/{item_id}
+        # DELETE /api/orders/{order_id}/items/{item_id}
         resp = self.client.delete(
             f"{BASE_URL}/{order_id}/items/{item_id}",
         )
