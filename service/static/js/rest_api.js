@@ -169,7 +169,7 @@ $(function () {
 
     // ****************************************
     // Create an Order
-    // #create-btn → POST /orders
+    // #create-btn → POST /api/orders
     // ****************************************
 
     $("#create-btn").click(function () {
@@ -182,7 +182,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "POST",
-            url: "/orders",
+            url: "/api/orders",
             contentType: "application/json",
             data: JSON.stringify(data),
         });
@@ -204,7 +204,7 @@ $(function () {
 
     // ****************************************
     // Retrieve an Order
-    // #retrieve-btn → GET /orders/${order_id}
+    // #retrieve-btn → GET /api/orders/${order_id}
     // ****************************************
     $("#retrieve-btn").click(function () {
         let order_id = $("#order_id").val();
@@ -218,7 +218,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "GET",
-            url: `/orders/${order_id}`,
+            url: `/api/orders/${order_id}`,
             contentType: "application/json",
         });
 
@@ -264,7 +264,7 @@ $(function () {
 
     // ****************************************
     // Update an Order
-    // #update-btn → PUT /orders/${order_id}
+    // #update-btn → PUT /api/orders/${order_id}
     // ****************************************
 
     $("#update-btn").click(function () {
@@ -283,7 +283,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "PUT",
-            url: `/orders/${order_id}`,
+            url: `/api/orders/${order_id}`,
             contentType: "application/json",
             data: JSON.stringify(data),
         });
@@ -306,7 +306,7 @@ $(function () {
         const order_id = $("#order_id").val();
         if (order_id) {
             $.ajax({
-                url: `orders/${order_id}`,
+                url: `/api/orders/${order_id}`,
                 type: 'DELETE',
                 dataType: 'json',
                 success: function (data) {
@@ -325,7 +325,7 @@ $(function () {
 
     // ****************************************
     // List / Query Orders
-    // #search-btn → GET /orders?customer_id=X
+    // #search-btn → GET /api/orders?customer_id=X
     // ****************************************
 
     $("#search-btn").click(function () {
@@ -345,7 +345,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "GET",
-            url: `/orders?${queryString}`,
+            url: `/api/orders?${queryString}`,
             contentType: "application/json",
         });
 
@@ -384,7 +384,7 @@ $(function () {
 
     // ****************************************
     // Cancel an Order (Action)
-    // #cancel-btn → PUT /orders/${order_id}/cancel
+    // #cancel-btn → PUT /api/orders/${order_id}/cancel
     // ****************************************
 
     $("#cancel-btn").click(function () {
@@ -398,7 +398,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "PUT",
-            url: `/orders/${order_id}/cancel`,
+            url: `/api/orders/${order_id}/cancel`,
             contentType: "application/json",
         });
 
@@ -418,7 +418,7 @@ $(function () {
 
     // ****************************************
     // Add an Item to an Order
-    // #add-item-btn → POST /orders/${order_id}/items
+    // #add-item-btn → POST /api/orders/${order_id}/items
     // ****************************************
 
     $("#add-item-btn").click(function () {
@@ -438,7 +438,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "POST",
-            url: `/orders/${order_id}/items`,
+            url: `/api/orders/${order_id}/items`,
             contentType: "application/json",
             data: JSON.stringify(data),
         });
@@ -459,7 +459,7 @@ $(function () {
 
     // ****************************************
     // Retrieve an Item from an Order
-    // #retrieve-item-btn → GET /orders/${order_id}/items/${item_id}
+    // #retrieve-item-btn → GET /api/orders/${order_id}/items/${item_id}
     // ****************************************
 
     $("#retrieve-item-btn").click(function () {
@@ -474,7 +474,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "GET",
-            url: `/orders/${order_id}/items/${item_id}`,
+            url: `/api/orders/${order_id}/items/${item_id}`,
             contentType: "application/json",
         });
 
@@ -495,7 +495,7 @@ $(function () {
 
     // ****************************************
     // Update an Item in an Order
-    // #update-item-btn → PUT /orders/${order_id}/items/${item_id}
+    // #update-item-btn → PUT /api/orders/${order_id}/items/${item_id}
     // ****************************************
 
     $("#update-item-btn").click(function () {
@@ -516,7 +516,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "PUT",
-            url: `/orders/${order_id}/items/${item_id}`,
+            url: `/api/orders/${order_id}/items/${item_id}`,
             contentType: "application/json",
             data: JSON.stringify(data),
         });
@@ -540,7 +540,7 @@ $(function () {
         const item_id = $("#item_id").val();
         if (order_id && item_id) {
             $.ajax({
-                url: `orders/${order_id}/items/${item_id}`,
+                url: `/api/orders/${order_id}/items/${item_id}`,
                 type: 'DELETE',
                 dataType: 'json',
                 success: function (data) {
@@ -565,7 +565,7 @@ $(function () {
 
     // ****************************************
     // List Items in an Order
-    // #list-items-btn → GET /orders/${order_id}/items
+    // #list-items-btn → GET /api/orders/${order_id}/items
     // ****************************************
 
     $("#list-items-btn").click(function () {
@@ -579,7 +579,7 @@ $(function () {
 
         let ajax = $.ajax({
             type: "GET",
-            url: `/orders/${order_id}/items`,
+            url: `/api/orders/${order_id}/items`,
             contentType: "application/json",
         });
 

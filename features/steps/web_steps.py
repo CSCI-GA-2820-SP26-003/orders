@@ -278,10 +278,10 @@ def step_impl(context):
     """Remove all orders through the REST API"""
     base_url = context.base_url.rstrip("/")
 
-    response = requests.get(f"{base_url}/orders")
+    response = requests.get(f"{base_url}/api/orders")
     assert response.status_code == 200, response.text
 
     orders = response.json()
     for order in orders:
-        resp = requests.delete(f"{base_url}/orders/{order['id']}")
+        resp = requests.delete(f"{base_url}/api/orders/{order['id']}")
         assert resp.status_code == 204, resp.text

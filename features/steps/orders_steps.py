@@ -49,7 +49,7 @@ def step_impl(context):
     """Seed orders via the REST API from a Gherkin table"""
     for row in context.table:
         res = requests.post(
-            f"{context.base_url}/orders",
+            f"{context.base_url}/api/orders",
             json={"customer_id": row["customer_id"], "status": row["status"]},
         )
         assert res.status_code == HTTP_201_CREATED
@@ -61,7 +61,7 @@ def step_impl(context):
     """Add items to the saved order via the REST API from a Gherkin table"""
     for row in context.table:
         res = requests.post(
-            f"{context.base_url}/orders/{context.order_id}/items",
+            f"{context.base_url}/api/orders/{context.order_id}/items",
             json={
                 "name": row["name"],
                 "quantity": int(row["quantity"]),
@@ -152,7 +152,7 @@ def step_impl(context, field):
 def step_impl(context):
     """Create an order that can be cancelled"""
     res = requests.post(
-        f"{context.base_url}/orders",
+        f"{context.base_url}/api/orders",
         json={"customer_id": 42, "status": "OPEN"},
     )
     assert res.status_code == HTTP_201_CREATED
@@ -163,13 +163,13 @@ def step_impl(context):
 def step_impl(context):
     """Create an order and cancel it once for setup"""
     res = requests.post(
-        f"{context.base_url}/orders",
+        f"{context.base_url}/api/orders",
         json={"customer_id": 42, "status": "OPEN"},
     )
     assert res.status_code == HTTP_201_CREATED
     context.order_id = res.json()["id"]
 
-    cancel_res = requests.put(f"{context.base_url}/orders/{context.order_id}/cancel")
+    cancel_res = requests.put(f"{context.base_url}/api/orders/{context.order_id}/cancel")
     assert cancel_res.status_code == HTTP_200_OK
 
 

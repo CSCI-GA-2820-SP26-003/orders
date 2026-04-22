@@ -23,8 +23,24 @@ and Delete Order
 
 from flask import jsonify, request, url_for, abort
 from flask import current_app as app  # Import Flask application
+from flask_restx import Api
 from service.models import Order, Item, OrderStatus
 from service.common import status  # HTTP Status Codes
+
+
+######################################################################
+# Configure Swagger before initializing it
+######################################################################
+api = Api(
+    app,
+    version="1.0.0",
+    title="Order Demo REST API Service",
+    description="This is a sample server Orders store server.",
+    default="orders",
+    default_label="Order operations",
+    doc="/apidocs",
+    prefix="/api",
+)
 
 
 ######################################################################
@@ -53,7 +69,7 @@ def index():
 ######################################################################
 # CREATE A NEW ORDER
 ######################################################################
-@app.route("/orders", methods=["POST"])
+@app.route("/api/orders", methods=["POST"])
 def create_orders():
     """
     Creates an Order
@@ -85,7 +101,7 @@ def create_orders():
 ######################################################################
 
 
-@app.route("/orders", methods=["GET"])
+@app.route("/api/orders", methods=["GET"])
 def list_orders():
     """
     Retrieve a list of Orders
@@ -131,7 +147,7 @@ def list_orders():
 ######################################################################
 
 
-@app.route("/orders/<int:order_id>", methods=["GET"])
+@app.route("/api/orders/<int:order_id>", methods=["GET"])
 def get_order(order_id):
     """
     Retrieve a single Order
@@ -147,7 +163,7 @@ def get_order(order_id):
 ######################################################################
 # DELETE AN ORDER
 ######################################################################
-@app.route("/orders/<int:order_id>", methods=["DELETE"])
+@app.route("/api/orders/<int:order_id>", methods=["DELETE"])
 def delete_orders(order_id):
     """
     Delete an Order
@@ -167,7 +183,7 @@ def delete_orders(order_id):
 ######################################################################
 # READ AN ITEM FROM AN ORDER
 ######################################################################
-@app.route("/orders/<order_id>/items/<item_id>", methods=["GET"])
+@app.route("/api/orders/<order_id>/items/<item_id>", methods=["GET"])
 def get_order_item(order_id, item_id):
     """
     Retrieve an Item from an Order
@@ -203,7 +219,7 @@ def get_order_item(order_id, item_id):
 ######################################################################
 # UPDATE AN EXISTING ORDER
 ######################################################################
-@app.route("/orders/<int:order_id>", methods=["PUT"])
+@app.route("/api/orders/<int:order_id>", methods=["PUT"])
 def update_orders(order_id):
     """
     Update an Order
@@ -260,7 +276,7 @@ def validate_item(data, name, quantity, unit_price):
         abort(status.HTTP_400_BAD_REQUEST, "quantity must be a positive integer.")
 
 
-@app.route("/orders/<order_id>/items", methods=["POST"])
+@app.route("/api/orders/<order_id>/items", methods=["POST"])
 def add_order_item(order_id):
     """
     Add an Item to an Order
@@ -308,7 +324,7 @@ def add_order_item(order_id):
 ######################################################################
 # LIST ALL ITEMS IN AN ORDER
 ######################################################################
-@app.route("/orders/<order_id>/items", methods=["GET"])
+@app.route("/api/orders/<order_id>/items", methods=["GET"])
 def list_order_items(order_id):
     """
     List all Items in an Order
@@ -337,7 +353,7 @@ def list_order_items(order_id):
 ######################################################################
 # UPDATE AN ITEM
 ######################################################################
-@app.route("/orders/<int:order_id>/items/<int:item_id>", methods=["PUT"])
+@app.route("/api/orders/<int:order_id>/items/<int:item_id>", methods=["PUT"])
 def update_items(order_id, item_id):
     """
     Update an Item in an Order
@@ -372,7 +388,7 @@ def update_items(order_id, item_id):
 ######################################################################
 # DELETE AN ITEM FROM AN ORDER
 ######################################################################
-@app.route("/orders/<order_id>/items/<item_id>", methods=["DELETE"])
+@app.route("/api/orders/<order_id>/items/<item_id>", methods=["DELETE"])
 def delete_item(order_id, item_id):
     """
     Delete an Item in an Order
@@ -433,7 +449,7 @@ def check_content_type(content_type):
 ######################################################################
 # CANCEL AN ORDER
 ######################################################################
-@app.route("/orders/<order_id>/cancel", methods=["PUT"])
+@app.route("/api/orders/<order_id>/cancel", methods=["PUT"])
 def cancel_order(order_id):
     """
     Cancel an Order
