@@ -156,7 +156,8 @@ def get_order(order_id):
     app.logger.info("Request to retrieve an Order with id: %s", order_id)
     order = Order.find(order_id)
     if not order:
-        abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
+        abort(status.HTTP_404_NOT_FOUND,
+              f"Order with id '{order_id}' was not found.")
     return jsonify(order.serialize()), status.HTTP_200_OK
 
 
@@ -212,6 +213,31 @@ item_model = api.inherit(
             readOnly=True,
             description="The unique id assigned internally by service",
         ),
+    },
+)
+
+order_base_model = api.model(
+    "OrderBase",
+    {
+        "customer_id": fields.Integer(
+            required=True,
+            description="The id of the customer corresponding to this order"
+        ),
+        "items": fields.List(fields.Integer(required=False, description="The items in an order")),
+        "status": fields.String(
+            required=True, description="Status of the given order"
+        ),
+    },
+)
+order_internal_model = api.inherit(
+    "OrderInternal",
+    order_base_model,
+    {
+        "id": fields.Integer(
+            readOnly=True,
+            description="The unique database id assigned internally by service",
+        ),
+        "date_created": fields.DateTime(readOnly=True, description="The date the order was created")
     },
 )
 
@@ -331,7 +357,8 @@ class ItemResource(Resource):
     @api.marshal_with(item_model)
     def get(self, order_id, item_id):
         """Retrieve a single Item from an Order"""
-        app.logger.info("Request to retrieve Item %s from Order %s", item_id, order_id)
+        app.logger.info(
+            "Request to retrieve Item %s from Order %s", item_id, order_id)
         try:
             order_id = int(order_id)
             item_id = int(item_id)
@@ -410,7 +437,8 @@ class ItemResource(Resource):
     @api.response(404, "Order or Item not found")
     def delete(self, order_id, item_id):
         """Delete an Item from an Order"""
-        app.logger.info("Request to delete Item %s from Order %s", item_id, order_id)
+        app.logger.info(
+            "Request to delete Item %s from Order %s", item_id, order_id)
 
         try:
             order_id = int(order_id)
@@ -472,7 +500,8 @@ def validate_item(data, name, quantity, unit_price):
             abort(status.HTTP_400_BAD_REQUEST, "unit_price must be a float")
 
     if quantity <= 0:
-        abort(status.HTTP_400_BAD_REQUEST, "quantity must be a positive integer.")
+        abort(status.HTTP_400_BAD_REQUEST,
+              "quantity must be a positive integer.")
 
 
 ######################################################################
@@ -493,7 +522,8 @@ def update_orders(order_id):
     # See if the order exists and abort if it doesn't
     order = Order.find(order_id)
     if not order:
-        abort(status.HTTP_404_NOT_FOUND, f"Order with id '{order_id}' was not found.")
+        abort(status.HTTP_404_NOT_FOUND,
+              f"Order with id '{order_id}' was not found.")
 
     # Update from the json in the body of the request
     order.deserialize(request.get_json())
@@ -520,7 +550,8 @@ def check_content_type(content_type):
     if request.headers["Content-Type"] == content_type:
         return
 
-    app.logger.error("Invalid Content-Type: %s", request.headers["Content-Type"])
+    app.logger.error("Invalid Content-Type: %s",
+                     request.headers["Content-Type"])
     abort(
         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, f"Content-Type must be {content_type}"
     )
@@ -539,7 +570,8 @@ def cancel_order(order_id):
     try:
         order_id = int(order_id)
     except ValueError:
-        abort(status.HTTP_400_BAD_REQUEST, "Invalid ID: order_id must be an integer.")
+        abort(status.HTTP_400_BAD_REQUEST,
+              "Invalid ID: order_id must be an integer.")
 
     order = Order.find(order_id)
     if not order:
