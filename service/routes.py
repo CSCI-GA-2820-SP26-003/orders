@@ -21,7 +21,7 @@ This service implements a REST API that allows you to Create, Read, Update
 and Delete Order
 """
 
-from flask import jsonify, request, url_for, abort
+from flask import jsonify, request, abort
 from flask import current_app as app  # Import Flask application
 from flask_restx import Api, Resource, fields
 from service.models import Order, Item, OrderStatus
@@ -547,6 +547,8 @@ class OrderResource(Resource):
 @api.route("/orders/<order_id>/cancel", strict_slashes=False)
 @api.param("order_id", "The Order identifier")
 class OrderCancellationResource(Resource):
+    """Handles cancellation-related interactions for orders"""
+
     def put(self, order_id):
         """
         Cancel an Order
