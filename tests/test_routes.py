@@ -459,7 +459,11 @@ class TestYourResourceService(TestCase):
         # POST /api/orders/{order_id}/items
         resp = self.client.post(
             f"{BASE_URL}/{order_id}/items",
-            json={"name": item_data["name"], "quantity": item_data["quantity"], "unit_price": item_data["unit_price"]},
+            json={
+                "name": item_data["name"],
+                "quantity": item_data["quantity"],
+                "unit_price": item_data["unit_price"],
+            },
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
@@ -626,6 +630,27 @@ class TestYourResourceService(TestCase):
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
+
+    def test_update_item_invalid_order_id(self):
+        """It should return 400 for an invalid order_id on update"""
+        item = ItemFactory()
+        resp = self.client.put(
+            f"{BASE_URL}/abc/items/1",
+            json=item.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
+
+    def test_update_item_invalid_item_id(self):
+        """It should return 400 for an invalid item_id on update"""
+        order = self._create_orders(1)[0]
+        item = ItemFactory()
+        resp = self.client.put(
+            f"{BASE_URL}/{order.id}/items/abc",
+            json=item.serialize(),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     ######################################################################
     #  D E L E T E   O R D E R   I T E M   T E S T   C A S E S
@@ -824,7 +849,8 @@ class TestYourResourceService(TestCase):
         target_status = target_order.status
 
         matching_orders = [
-            o for o in orders
+            o
+            for o in orders
             if o.customer_id == target_customer_id and o.status == target_status
         ]
 
