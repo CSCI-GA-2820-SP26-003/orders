@@ -1,5 +1,6 @@
 # The petstore database should be created for you, if not here is the command:
 # psql -c "create database petstore;" -U postgres
+# PostgreSQL is initialized with the configured database from postgres-config.
 ---
 apiVersion: apps/v1
 kind: StatefulSet
