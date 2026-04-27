@@ -77,7 +77,7 @@ spec:
 
     - name: build-image
       taskRef:
-        name: buildah
+        name: buildah-nopriv
       runAfter:
         - unit-test
         - lint
