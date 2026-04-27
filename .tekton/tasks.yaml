@@ -55,3 +55,49 @@ spec:
         flake8 service tests --count --select=E9,F63,F7,F82 --show-source --statistics
         flake8 service tests --count --max-complexity=10 --max-line-length=127 --statistics
         pylint service tests --max-line-length=127
+
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: deploy-orders
+spec:
+  workspaces:
+    - name: source
+  steps:
+    - name: deploy
+      image: quay.io/openshift/origin-cli:latest
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/bin/bash
+        set -e
+
+        echo "Deploying Orders service to OpenShift..."
+
+        echo "Applying Orders Kubernetes/OpenShift manifests..."
+        oc apply -f k8s/deployment.yaml
+        oc apply -f k8s/service.yaml
+        oc apply -f k8s/route.yaml
+
+        echo "Waiting for Orders deployment rollout to complete..."
+        oc rollout status deployment/orders --timeout=180s
+
+        echo "Waiting for Orders pod to become Ready..."
+        oc wait --for=condition=Ready pod -l app=orders --timeout=180s
+
+        echo "Checking OpenShift route..."
+        ROUTE_HOST=$(oc get route orders -o jsonpath='{.spec.host}')
+
+        if [ -z "$ROUTE_HOST" ]; then
+          echo "ERROR: Route host is empty."
+          exit 1
+        fi
+
+        HEALTH_URL="http://${ROUTE_HOST}/health"
+        echo "Checking health endpoint: ${HEALTH_URL}"
+
+        curl -fsS "${HEALTH_URL}"
+
+        echo ""
+        echo "Orders service deployed successfully."
+        echo "Health check passed."

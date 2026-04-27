@@ -56,6 +56,7 @@ spec:
       workspaces:
         - name: output
           workspace: pipeline-workspace
+
     - name: unit-test
       taskRef:
         name: pytest
@@ -64,6 +65,7 @@ spec:
       workspaces:
         - name: source
           workspace: pipeline-workspace
+
     - name: lint
       taskRef:
         name: pylint
@@ -72,5 +74,16 @@ spec:
       workspaces:
         - name: source
           workspace: pipeline-workspace
+      
+    - name: deploy-orders
+      taskRef:
+        name: deploy-orders
+      runAfter:
+        - unit-test
+        - lint
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+
   workspaces:
     - name: pipeline-workspace
