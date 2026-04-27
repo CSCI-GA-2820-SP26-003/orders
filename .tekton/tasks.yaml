@@ -55,3 +55,38 @@ spec:
         flake8 service tests --count --select=E9,F63,F7,F82 --show-source --statistics
         flake8 service tests --count --max-complexity=10 --max-line-length=127 --statistics
         pylint service tests --max-line-length=127
+
+---
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: buildah-nopriv
+spec:
+  workspaces:
+    - name: source
+  params:
+    - name: IMAGE
+      description: Image name to build and push
+      type: string
+    - name: DOCKERFILE
+      description: Path to Dockerfile
+      type: string
+      default: ./Dockerfile
+    - name: CONTEXT
+      description: Build context
+      type: string
+      default: .
+  steps:
+    - name: build-and-push
+      image: quay.io/buildah/stable:v1.37.0
+      workingDir: $(workspaces.source.path)
+      env:
+        - name: STORAGE_DRIVER
+          value: vfs
+        - name: BUILDAH_ISOLATION
+          value: chroot
+      script: |
+        #!/bin/sh
+        buildah bud --storage-driver=vfs --isolation=chroot -f $(params.DOCKERFILE) -t $(params.IMAGE) $(params.CONTEXT)
+        buildah push --storage-driver=vfs --tls-verify=false $(params.IMAGE)
