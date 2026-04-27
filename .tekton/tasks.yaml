@@ -74,25 +74,28 @@ spec:
 
         echo "Deploying Orders service to OpenShift..."
 
-        echo "Applying Orders Kubernetes/OpenShift manifests..."
-        oc apply -f k8s/deployment.yaml
-        oc apply -f k8s/service.yaml
-        oc apply -f k8s/route.yaml
+        NAMESPACE=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
+        IMAGE="image-registry.openshift-image-registry.svc:5000/${NAMESPACE}/orders:latest"
 
-        echo "Setting Orders image from current OpenShift project..."
-        PROJECT=$(oc project -q)
-        IMAGE="image-registry.openshift-image-registry.svc:5000/${PROJECT}/orders:latest"
+        echo "Using namespace: ${NAMESPACE}"
         echo "Using image: ${IMAGE}"
-        oc set image deployment/orders orders="${IMAGE}"
+
+        echo "Applying Orders Kubernetes/OpenShift manifests..."
+        oc apply -f k8s/deployment.yaml -n "${NAMESPACE}"
+        oc apply -f k8s/service.yaml -n "${NAMESPACE}"
+        oc apply -f k8s/route.yaml -n "${NAMESPACE}"
+
+        echo "Setting Orders image from current OpenShift namespace..."
+        oc set image deployment/orders orders="${IMAGE}" -n "${NAMESPACE}"
 
         echo "Waiting for Orders deployment rollout to complete..."
-        oc rollout status deployment/orders --timeout=180s
+        oc rollout status deployment/orders -n "${NAMESPACE}" --timeout=180s
 
         echo "Waiting for Orders pod to become Ready..."
-        oc wait --for=condition=Ready pod -l app=orders --timeout=180s
+        oc wait --for=condition=Ready pod -l app=orders -n "${NAMESPACE}" --timeout=180s
 
         echo "Checking OpenShift route..."
-        ROUTE_HOST=$(oc get route orders -o jsonpath='{.spec.host}')
+        ROUTE_HOST=$(oc get route orders -n "${NAMESPACE}" -o jsonpath='{.spec.host}')
 
         if [ -z "$ROUTE_HOST" ]; then
           echo "ERROR: Route host is empty."
