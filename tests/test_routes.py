@@ -133,15 +133,13 @@ class TestYourResourceService(TestCase):
 
     def test_create_order_no_data(self):
         """It should not Create an Order with missing data"""
-        resp = self.client.post(
-            BASE_URL, json={}, content_type="application/json")
+        resp = self.client.post(BASE_URL, json={}, content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_order_no_content_type(self):
         """It should not Create an Order with no content type"""
         resp = self.client.post(BASE_URL)
-        self.assertEqual(resp.status_code,
-                         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
     def test_create_order_missing_customer_id(self):
         """It should not Create an Order without a customer_id"""
@@ -184,8 +182,7 @@ class TestYourResourceService(TestCase):
 
     def test_get_order_not_found(self):
         """It should not GET an Order that is not found"""
-        resp = self.client.get(
-            f"{BASE_URL}/0", content_type="application/json")
+        resp = self.client.get(f"{BASE_URL}/0", content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     ######################################################################
@@ -217,8 +214,7 @@ class TestYourResourceService(TestCase):
 
     def test_get_order_item_order_not_found(self):
         """It should not GET an Item from a non-existing Order"""
-        resp = self.client.get(f"{BASE_URL}/0/items/1",
-                               content_type="application/json")
+        resp = self.client.get(f"{BASE_URL}/0/items/1", content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_get_order_item_not_found(self):
@@ -326,8 +322,7 @@ class TestYourResourceService(TestCase):
 
     def test_list_order_items_order_not_found(self):
         """It should not list Items for a non-existing Order"""
-        resp = self.client.get(f"{BASE_URL}/0/items",
-                               content_type="application/json")
+        resp = self.client.get(f"{BASE_URL}/0/items", content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_list_all_orders(self):
@@ -341,8 +336,7 @@ class TestYourResourceService(TestCase):
 
     def test_list_order_items_invalid_order_id(self):
         """It should return 400 for an invalid order_id"""
-        resp = self.client.get(f"{BASE_URL}/abc/items",
-                               content_type="application/json")
+        resp = self.client.get(f"{BASE_URL}/abc/items", content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_list_order_items_contains_correct_data(self):
@@ -431,8 +425,7 @@ class TestYourResourceService(TestCase):
         # POST /api/orders/{order_id}/items
         resp = self.client.post(
             f"{BASE_URL}/{order_id}/items",
-            json={"name": item_data["name"],
-                  "quantity": item_data["quantity"]},
+            json={"name": item_data["name"], "quantity": item_data["quantity"]},
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
@@ -806,8 +799,7 @@ class TestYourResourceService(TestCase):
         """It should return only Orders that match the given customer_id"""
         orders = self._create_orders(5)
         target_customer_id = orders[0].customer_id
-        customer_orders = [
-            o for o in orders if o.customer_id == target_customer_id]
+        customer_orders = [o for o in orders if o.customer_id == target_customer_id]
 
         resp = self.client.get(
             f"{BASE_URL}?customer_id={target_customer_id}",
@@ -975,5 +967,79 @@ class TestYourResourceService(TestCase):
         resp = self.client.post(
             BASE_URL, json=order_data, content_type="invalid-content-type"
         )
-        self.assertEqual(resp.status_code,
-                         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
+    ######################################################################
+    #  E R R O R   H A N D L E R   T E S T   C A S E S
+    ######################################################################
+
+    def _assert_json_error(self, resp, expected_status):
+        """Helper: assert the response is a JSON error with expected status"""
+        self.assertEqual(resp.status_code, expected_status)
+        self.assertNotEqual(resp.status_code, status.HTTP_500_INTERNAL_SERVER_ERROR)
+        self.assertIn("application/json", resp.content_type)
+        data = resp.get_json()
+        self.assertIsNotNone(data)
+        self.assertIn("message", data)
+
+    def test_malformed_json_returns_400_json(self):
+        """It should return 400 JSON when the request body is malformed JSON"""
+        resp = self.client.post(
+            BASE_URL,
+            data="{not valid json",
+            content_type="application/json",
+        )
+        self._assert_json_error(resp, status.HTTP_400_BAD_REQUEST)
+
+    def test_missing_content_type_returns_415_json(self):
+        """It should return 415 JSON when no Content-Type header is sent"""
+        resp = self.client.post(BASE_URL, data="{}")
+        self._assert_json_error(resp, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
+    def test_wrong_content_type_returns_415_json(self):
+        """It should return 415 JSON when Content-Type is not application/json"""
+        resp = self.client.post(BASE_URL, data="{}", content_type="text/plain")
+        self._assert_json_error(resp, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+
+    def test_not_found_resource_returns_404_json(self):
+        """It should return 404 JSON when the requested resource does not exist"""
+        resp = self.client.get(f"{BASE_URL}/999999", content_type="application/json")
+        self._assert_json_error(resp, status.HTTP_404_NOT_FOUND)
+
+    def test_unknown_route_returns_404_json(self):
+        """It should return 404 JSON for an unknown route under the API"""
+        resp = self.client.get("/api/this-route-does-not-exist")
+        self._assert_json_error(resp, status.HTTP_404_NOT_FOUND)
+
+    def test_data_validation_error_returns_400_json(self):
+        """It should return 400 JSON when DataValidationError is raised"""
+        # Missing customer_id triggers DataValidationError in Order.deserialize
+        payload = {"items": []}
+        resp = self.client.post(BASE_URL, json=payload, content_type="application/json")
+        self._assert_json_error(resp, status.HTTP_400_BAD_REQUEST)
+
+    def test_invalid_id_format_returns_400_json(self):
+        """It should return 400 JSON when an ID path parameter is not an integer"""
+        resp = self.client.get(f"{BASE_URL}/abc/items", content_type="application/json")
+        self._assert_json_error(resp, status.HTTP_400_BAD_REQUEST)
+
+    def test_invalid_item_data_returns_400_json(self):
+        """It should return 400 JSON when item data fails validation"""
+        order = self._create_orders(1)[0]
+        resp = self.client.post(
+            f"{BASE_URL}/{order.id}/items",
+            json={"name": "", "quantity": 0},
+            content_type="application/json",
+        )
+        self._assert_json_error(resp, status.HTTP_400_BAD_REQUEST)
+
+    def test_empty_body_with_json_content_type_returns_400_json(self):
+        """It should return 400 JSON when body is empty with JSON content type"""
+        resp = self.client.post(BASE_URL, data="", content_type="application/json")
+        self._assert_json_error(resp, status.HTTP_400_BAD_REQUEST)
+
+    def test_method_not_allowed_returns_405_json(self):
+        """It should return 405 JSON when an HTTP method is not allowed"""
+        # /health is GET-only; POST should yield 405
+        resp = self.client.post("/health")
+        self._assert_json_error(resp, status.HTTP_405_METHOD_NOT_ALLOWED)
