@@ -60,10 +60,63 @@ spec:
 apiVersion: tekton.dev/v1
 kind: Task
 metadata:
+  name: build-and-push-image
+spec:
+  workspaces:
+    - name: source
+  params:
+    - name: IMAGE
+      description: Image name to build and push
+      type: string
+    - name: CONTEXT
+      description: Build context
+      type: string
+      default: .
+  steps:
+    - name: build-and-push
+      image: quay.io/openshift/origin-cli:latest
+      workingDir: $(workspaces.source.path)
+      script: |
+        #!/bin/bash
+        set -e
+
+        NAMESPACE=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
+
+        echo "Building and pushing Orders image..."
+        echo "Namespace: ${NAMESPACE}"
+        echo "Expected image: $(params.IMAGE)"
+
+        echo "Ensuring OpenShift binary BuildConfig exists..."
+        if ! oc get bc orders -n "${NAMESPACE}" >/dev/null 2>&1; then
+          oc new-build --binary --name=orders --strategy=docker -n "${NAMESPACE}"
+        else
+          echo "BuildConfig orders already exists."
+        fi
+
+        echo "Starting binary Docker build from context: $(params.CONTEXT)"
+        oc start-build orders \
+          --from-dir="$(params.CONTEXT)" \
+          --follow \
+          --wait \
+          -n "${NAMESPACE}"
+
+        echo "Verifying pushed image stream tag..."
+        oc get istag orders:latest -n "${NAMESPACE}"
+
+        echo "Image build and push completed successfully."
+
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
   name: deploy-orders
 spec:
   workspaces:
     - name: source
+  params:
+    - name: IMAGE
+      description: Image name to deploy
+      type: string
   steps:
     - name: deploy
       image: quay.io/openshift/origin-cli:latest
@@ -75,7 +128,7 @@ spec:
         echo "Deploying Orders service to OpenShift..."
 
         NAMESPACE=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
-        IMAGE="image-registry.openshift-image-registry.svc:5000/${NAMESPACE}/orders:latest"
+        IMAGE="$(params.IMAGE)"
 
         echo "Using namespace: ${NAMESPACE}"
         echo "Using image: ${IMAGE}"
@@ -85,14 +138,14 @@ spec:
         oc apply -f k8s/service.yaml -n "${NAMESPACE}"
         oc apply -f k8s/route.yaml -n "${NAMESPACE}"
 
-        echo "Setting Orders image from current OpenShift namespace..."
+        echo "Setting Orders image built by Tekton..."
         oc set image deployment/orders orders="${IMAGE}" -n "${NAMESPACE}"
 
         echo "Waiting for Orders deployment rollout to complete..."
-        oc rollout status deployment/orders -n "${NAMESPACE}" --timeout=180s
+        oc rollout status deployment/orders -n "${NAMESPACE}" --timeout=300s
 
         echo "Waiting for Orders pod to become Ready..."
-        oc wait --for=condition=Ready pod -l app=orders -n "${NAMESPACE}" --timeout=180s
+        oc wait --for=condition=Ready pod -l app=orders -n "${NAMESPACE}" --timeout=300s
 
         echo "Checking OpenShift route..."
         ROUTE_HOST=$(oc get route orders -n "${NAMESPACE}" -o jsonpath='{.spec.host}')

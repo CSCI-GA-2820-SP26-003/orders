@@ -133,15 +133,13 @@ class TestYourResourceService(TestCase):
 
     def test_create_order_no_data(self):
         """It should not Create an Order with missing data"""
-        resp = self.client.post(
-            BASE_URL, json={}, content_type="application/json")
+        resp = self.client.post(BASE_URL, json={}, content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_create_order_no_content_type(self):
         """It should not Create an Order with no content type"""
         resp = self.client.post(BASE_URL)
-        self.assertEqual(resp.status_code,
-                         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
 
     def test_create_order_missing_customer_id(self):
         """It should not Create an Order without a customer_id"""
@@ -184,8 +182,7 @@ class TestYourResourceService(TestCase):
 
     def test_get_order_not_found(self):
         """It should not GET an Order that is not found"""
-        resp = self.client.get(
-            f"{BASE_URL}/0", content_type="application/json")
+        resp = self.client.get(f"{BASE_URL}/0", content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     ######################################################################
@@ -217,8 +214,7 @@ class TestYourResourceService(TestCase):
 
     def test_get_order_item_order_not_found(self):
         """It should not GET an Item from a non-existing Order"""
-        resp = self.client.get(f"{BASE_URL}/0/items/1",
-                               content_type="application/json")
+        resp = self.client.get(f"{BASE_URL}/0/items/1", content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_get_order_item_not_found(self):
@@ -326,8 +322,7 @@ class TestYourResourceService(TestCase):
 
     def test_list_order_items_order_not_found(self):
         """It should not list Items for a non-existing Order"""
-        resp = self.client.get(f"{BASE_URL}/0/items",
-                               content_type="application/json")
+        resp = self.client.get(f"{BASE_URL}/0/items", content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_404_NOT_FOUND)
 
     def test_list_all_orders(self):
@@ -341,8 +336,7 @@ class TestYourResourceService(TestCase):
 
     def test_list_order_items_invalid_order_id(self):
         """It should return 400 for an invalid order_id"""
-        resp = self.client.get(f"{BASE_URL}/abc/items",
-                               content_type="application/json")
+        resp = self.client.get(f"{BASE_URL}/abc/items", content_type="application/json")
         self.assertEqual(resp.status_code, status.HTTP_400_BAD_REQUEST)
 
     def test_list_order_items_contains_correct_data(self):
@@ -431,8 +425,7 @@ class TestYourResourceService(TestCase):
         # POST /api/orders/{order_id}/items
         resp = self.client.post(
             f"{BASE_URL}/{order_id}/items",
-            json={"name": item_data["name"],
-                  "quantity": item_data["quantity"]},
+            json={"name": item_data["name"], "quantity": item_data["quantity"]},
             content_type="application/json",
         )
         self.assertEqual(resp.status_code, status.HTTP_201_CREATED)
@@ -806,8 +799,7 @@ class TestYourResourceService(TestCase):
         """It should return only Orders that match the given customer_id"""
         orders = self._create_orders(5)
         target_customer_id = orders[0].customer_id
-        customer_orders = [
-            o for o in orders if o.customer_id == target_customer_id]
+        customer_orders = [o for o in orders if o.customer_id == target_customer_id]
 
         resp = self.client.get(
             f"{BASE_URL}?customer_id={target_customer_id}",
@@ -975,5 +967,4 @@ class TestYourResourceService(TestCase):
         resp = self.client.post(
             BASE_URL, json=order_data, content_type="invalid-content-type"
         )
-        self.assertEqual(resp.status_code,
-                         status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)
+        self.assertEqual(resp.status_code, status.HTTP_415_UNSUPPORTED_MEDIA_TYPE)

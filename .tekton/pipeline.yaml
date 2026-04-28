@@ -1,16 +1,16 @@
 apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
-  name: pvc-pipeline
+  name: orders-pipeline
 spec:
   params:
-    - description: The URL to the git repo
+    - description: The git repository URL to clone from
       name: GIT_REPO
       type: string
-    - default: master
-      description: The reference (branch or ref)
+    - description: The reference branch or ref
       name: GIT_REF
       type: string
+
   tasks:
     - name: git-clone
       params:
@@ -45,6 +45,7 @@ spec:
         - name: SPARSE_CHECKOUT_DIRECTORIES
           value: ""
       taskRef:
+        resolver: cluster
         params:
           - name: kind
             value: task
@@ -52,7 +53,6 @@ spec:
             value: git-clone
           - name: namespace
             value: openshift-pipelines
-        resolver: cluster
       workspaces:
         - name: output
           workspace: pipeline-workspace
@@ -74,13 +74,30 @@ spec:
       workspaces:
         - name: source
           workspace: pipeline-workspace
-      
+
+    - name: build-image
+      taskRef:
+        name: build-and-push-image
+      runAfter:
+        - unit-test
+        - lint
+      params:
+        - name: IMAGE
+          value: image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/orders:latest
+        - name: CONTEXT
+          value: .
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+
     - name: deploy-orders
       taskRef:
         name: deploy-orders
       runAfter:
-        - unit-test
-        - lint
+        - build-image
+      params:
+        - name: IMAGE
+          value: image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/orders:latest
       workspaces:
         - name: source
           workspace: pipeline-workspace
