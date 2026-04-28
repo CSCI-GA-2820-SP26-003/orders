@@ -7,9 +7,10 @@ spec:
     - description: The git repository URL to clone from
       name: GIT_REPO
       type: string
-    - description: The reference (branch or ref)
+    - description: The reference branch or ref
       name: GIT_REF
       type: string
+
   tasks:
     - name: git-clone
       params:
@@ -44,6 +45,7 @@ spec:
         - name: SPARSE_CHECKOUT_DIRECTORIES
           value: ""
       taskRef:
+        resolver: cluster
         params:
           - name: kind
             value: task
@@ -51,7 +53,6 @@ spec:
             value: git-clone
           - name: namespace
             value: openshift-pipelines
-        resolver: cluster
       workspaces:
         - name: output
           workspace: pipeline-workspace
@@ -85,6 +86,18 @@ spec:
           value: image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/orders:latest
         - name: CONTEXT
           value: .
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
+
+    - name: deploy-orders
+      taskRef:
+        name: deploy-orders
+      runAfter:
+        - build-image
+      params:
+        - name: IMAGE
+          value: image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/orders:latest
       workspaces:
         - name: source
           workspace: pipeline-workspace
