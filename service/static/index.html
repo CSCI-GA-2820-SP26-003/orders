@@ -138,6 +138,18 @@
       margin-top: 1px;
     }
 
+    .docs-link {
+      color: var(--blue);
+      text-decoration: none;
+      font-weight: 600;
+      transition: color .15s var(--ease);
+    }
+
+    .docs-link:hover {
+      color: #1d4ed8;
+      text-decoration: underline;
+    }
+
     .hdr-pill {
       font-size: 10.5px;
       font-weight: 700;
@@ -896,7 +908,12 @@
     <div class="hdr a1">
       <div>
         <h1>Orders REST API Service</h1>
-        <p>Create, retrieve, update, and manage orders</p>
+        <p>
+          Create, retrieve, update, and manage orders ·
+          <a href="/apidocs" target="_blank" rel="noopener" id="api-docs-link" class="docs-link">
+            View API documentation →
+          </a>
+        </p>
       </div>
       <div class="hdr-pill">v1.0</div>
     </div>
