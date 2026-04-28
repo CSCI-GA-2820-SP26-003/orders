@@ -2,7 +2,6 @@ apiVersion: tekton.dev/v1
 kind: Pipeline
 metadata:
   name: orders-pipeline
-  namespace: barryzzzz-dev
 spec:
   params:
     - description: The git repository URL to clone from
@@ -77,15 +76,13 @@ spec:
 
     - name: build-image
       taskRef:
-        name: buildah-nopriv
+        name: build-and-push-image
       runAfter:
         - unit-test
         - lint
       params:
         - name: IMAGE
           value: image-registry.openshift-image-registry.svc:5000/$(context.pipelineRun.namespace)/orders:latest
-        - name: DOCKERFILE
-          value: ./Dockerfile
         - name: CONTEXT
           value: .
       workspaces:
