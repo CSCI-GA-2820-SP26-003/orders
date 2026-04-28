@@ -15,8 +15,23 @@
 ######################################################################
 """
 Module: error_handlers
+
+Flask-RESTX automatically converts HTTP exceptions (400, 404, 405, 415, 500)
+into JSON responses for routes registered via @api.route(...). Therefore this
+module only registers handlers for cases Flask-RESTX does NOT cover:
+
+  - DataValidationError: a custom exception raised by the models layer
+  - 404 Not Found: for URLs that do not match any registered route
+    (Flask handles these before Flask-RESTX sees them)
+  - 405 Method Not Allowed: for valid URLs hit with the wrong HTTP method
+    (also handled by Flask before reaching Flask-RESTX)
+
+Do not add handlers for standard HTTPException codes raised inside RESTX
+routes — they are redundant.
 """
+from flask import jsonify
 from flask import current_app as app  # Import Flask application
+from werkzeug.exceptions import NotFound, MethodNotAllowed
 from service.models import DataValidationError
 from service.routes import api
 from . import status
@@ -33,5 +48,35 @@ def request_validation_error(error):
     return {
         "status": status.HTTP_400_BAD_REQUEST,
         "error": "Bad Request",
-        "message": message
+        "message": message,
     }, status.HTTP_400_BAD_REQUEST
+
+
+@app.errorhandler(NotFound)
+def not_found(error):
+    """Handles 404 Not Found errors with a JSON response"""
+    message = str(error)
+    app.logger.warning(message)
+    return (
+        jsonify(
+            status=status.HTTP_404_NOT_FOUND,
+            error="Not Found",
+            message=message,
+        ),
+        status.HTTP_404_NOT_FOUND,
+    )
+
+
+@app.errorhandler(MethodNotAllowed)
+def method_not_allowed(error):
+    """Handles 405 Method Not Allowed errors with a JSON response"""
+    message = str(error)
+    app.logger.warning(message)
+    return (
+        jsonify(
+            status=status.HTTP_405_METHOD_NOT_ALLOWED,
+            error="Method Not Allowed",
+            message=message,
+        ),
+        status.HTTP_405_METHOD_NOT_ALLOWED,
+    )
