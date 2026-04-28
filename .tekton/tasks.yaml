@@ -57,7 +57,6 @@ spec:
         pylint service tests --max-line-length=127
 
 ---
----
 apiVersion: tekton.dev/v1
 kind: Task
 metadata:
@@ -88,5 +87,15 @@ spec:
           value: chroot
       script: |
         #!/bin/sh
-        buildah bud --storage-driver=vfs --isolation=chroot -f $(params.DOCKERFILE) -t $(params.IMAGE) $(params.CONTEXT)
+        set -e
+
+        echo "Building image: $(params.IMAGE)"
+        buildah bud --storage-driver=vfs --isolation=chroot \
+          -f $(params.DOCKERFILE) \
+          -t $(params.IMAGE) \
+          $(params.CONTEXT)
+
+        echo "Pushing image: $(params.IMAGE)"
         buildah push --storage-driver=vfs --tls-verify=false $(params.IMAGE)
+
+        echo "Image build and push completed successfully."
