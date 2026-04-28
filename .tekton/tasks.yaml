@@ -60,7 +60,7 @@ spec:
 apiVersion: tekton.dev/v1
 kind: Task
 metadata:
-  name: buildah-nopriv
+  name: build-and-push-image
 spec:
   workspaces:
     - name: source
@@ -68,34 +68,39 @@ spec:
     - name: IMAGE
       description: Image name to build and push
       type: string
-    - name: DOCKERFILE
-      description: Path to Dockerfile
-      type: string
-      default: ./Dockerfile
     - name: CONTEXT
       description: Build context
       type: string
       default: .
   steps:
     - name: build-and-push
-      image: quay.io/buildah/stable:v1.37.0
+      image: quay.io/openshift/origin-cli:latest
       workingDir: $(workspaces.source.path)
-      env:
-        - name: STORAGE_DRIVER
-          value: vfs
-        - name: BUILDAH_ISOLATION
-          value: chroot
       script: |
-        #!/bin/sh
+        #!/bin/bash
         set -e
 
-        echo "Building image: $(params.IMAGE)"
-        buildah bud --storage-driver=vfs --isolation=chroot \
-          -f $(params.DOCKERFILE) \
-          -t $(params.IMAGE) \
-          $(params.CONTEXT)
+        NAMESPACE=$(cat /var/run/secrets/kubernetes.io/serviceaccount/namespace)
 
-        echo "Pushing image: $(params.IMAGE)"
-        buildah push --storage-driver=vfs --tls-verify=false $(params.IMAGE)
+        echo "Building and pushing Orders image..."
+        echo "Namespace: ${NAMESPACE}"
+        echo "Expected image: $(params.IMAGE)"
+
+        echo "Ensuring OpenShift binary BuildConfig exists..."
+        if ! oc get bc orders -n "${NAMESPACE}" >/dev/null 2>&1; then
+          oc new-build --binary --name=orders --strategy=docker -n "${NAMESPACE}"
+        else
+          echo "BuildConfig orders already exists."
+        fi
+
+        echo "Starting binary Docker build from context: $(params.CONTEXT)"
+        oc start-build orders \
+          --from-dir="$(params.CONTEXT)" \
+          --follow \
+          --wait \
+          -n "${NAMESPACE}"
+
+        echo "Verifying pushed image stream tag..."
+        oc get istag orders:latest -n "${NAMESPACE}"
 
         echo "Image build and push completed successfully."
