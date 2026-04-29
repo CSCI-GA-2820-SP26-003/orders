@@ -46,14 +46,14 @@ $(function () {
         bar.removeClass("t-ok t-err");
 
         let msg = message.toLowerCase();
-        if (msg.includes("success") || msg.includes("deleted") ||
-            msg.includes("created") || msg.includes("cancel")) {
-            bar.addClass("t-ok");
-        } else if (msg.includes("error") || msg.includes("not found") ||
+        if (msg.includes("error") || msg.includes("not found") ||
             msg.includes("405") || msg.includes("409") ||
             msg.includes("415") || msg.includes("400") ||
             msg.includes("conflict")) {
             bar.addClass("t-err");
+        } else if (msg.includes("success") || msg.includes("deleted") ||
+            msg.includes("created") || msg.includes("cancel")) {
+            bar.addClass("t-ok");
         }
     }
 
@@ -132,11 +132,12 @@ $(function () {
         html += '<tbody>';
         for (let i = 0; i < items.length; i++) {
             let item = items[i];
+            let price = (item.unit_price != null) ? "$" + item.unit_price.toFixed(2) : "—";
             html += `<tr>`;
             html += `<td>${item.id}</td>`;
             html += `<td style="font-weight:600">${item.name}</td>`;
             html += `<td>${item.quantity}</td>`;
-            html += `<td>$${item.unit_price.toFixed(2)}</td>`;
+            html += `<td>${price}</td>`;
             html += `</tr>`;
         }
         html += '</tbody></table>';
@@ -563,7 +564,7 @@ $(function () {
                 dataType: 'json',
                 success: function (data) {
                     flash_message("Item successfully deleted!");
-                    clear_form_data();
+                    clear_item_form_data();
                 },
                 error: function (xhr, status, error) {
                     flash_message(`Error deleting item: ${error}`);
