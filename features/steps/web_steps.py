@@ -89,6 +89,9 @@ def step_impl(context: Any, text: str, element_name: str) -> None:
 @then('I should see "{text}" in the "{element_name}" dropdown')
 def step_impl(context: Any, text: str, element_name: str) -> None:
     element_id = ID_PREFIX + element_name.lower().replace(" ", "_")
+    WebDriverWait(context.driver, context.wait_seconds).until(
+        lambda d: Select(d.find_element(By.ID, element_id)).first_selected_option.text == text
+    )
     element = Select(context.driver.find_element(By.ID, element_id))
     assert element.first_selected_option.text == text
 
