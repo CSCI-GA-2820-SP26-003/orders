@@ -1,13 +1,13 @@
 apiVersion: triggers.tekton.dev/v1beta1
 kind: TriggerTemplate
 metadata:
-  name: orders-master-template
+  name: orders-template
 spec:
   params:
     - name: git-repo-url
+      description: The git repository url
     - name: git-revision
-    - name: base-url
-      default: ""
+      description: The git revision
   resourcetemplates:
     - apiVersion: tekton.dev/v1
       kind: PipelineRun
@@ -23,7 +23,7 @@ spec:
           - name: GIT_REF
             value: $(tt.params.git-revision)
           - name: BASE_URL
-            value: $(tt.params.base-url)
+            value: "http://orders-divikapoor-dev.apps.rm2.thpm.p1.openshiftapps.com"
         workspaces:
           - name: pipeline-workspace
             persistentVolumeClaim:

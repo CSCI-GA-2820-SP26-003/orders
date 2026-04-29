@@ -1,53 +1,16 @@
 apiVersion: triggers.tekton.dev/v1beta1
 kind: Trigger
 metadata:
-  name: orders-master-push-trigger
+  name: orders-trigger
 spec:
   serviceAccountName: pipeline
   interceptors:
-    - ref:
-        name: github
-      params:
-        - name: secretRef
-          value:
-            secretName: github-webhook-secret
-            secretKey: secretToken
-        - name: eventTypes
-          value:
-            - push
     - ref:
         name: cel
       params:
         - name: filter
           value: body.ref == 'refs/heads/master'
   bindings:
-    - ref: orders-master-push-binding
+    - ref: orders-binding
   template:
-    ref: orders-master-template
----
-apiVersion: triggers.tekton.dev/v1beta1
-kind: Trigger
-metadata:
-  name: orders-master-pr-merge-trigger
-spec:
-  serviceAccountName: pipeline
-  interceptors:
-    - ref:
-        name: github
-      params:
-        - name: secretRef
-          value:
-            secretName: github-webhook-secret
-            secretKey: secretToken
-        - name: eventTypes
-          value:
-            - pull_request
-    - ref:
-        name: cel
-      params:
-        - name: filter
-          value: body.action == 'closed' && body.pull_request.merged == true && body.pull_request.base.ref == 'master'
-  bindings:
-    - ref: orders-master-pr-merge-binding
-  template:
-    ref: orders-master-template
+    ref: orders-template
