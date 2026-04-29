@@ -46,14 +46,14 @@ $(function () {
         bar.removeClass("t-ok t-err");
 
         let msg = message.toLowerCase();
-        if (msg.includes("success") || msg.includes("deleted") ||
-            msg.includes("created") || msg.includes("cancel")) {
-            bar.addClass("t-ok");
-        } else if (msg.includes("error") || msg.includes("not found") ||
+        if (msg.includes("error") || msg.includes("not found") ||
             msg.includes("405") || msg.includes("409") ||
             msg.includes("415") || msg.includes("400") ||
             msg.includes("conflict")) {
             bar.addClass("t-err");
+        } else if (msg.includes("success") || msg.includes("deleted") ||
+            msg.includes("created") || msg.includes("cancel")) {
+            bar.addClass("t-ok");
         }
     }
 
@@ -132,16 +132,35 @@ $(function () {
         html += '<tbody>';
         for (let i = 0; i < items.length; i++) {
             let item = items[i];
+            let price = (item.unit_price != null) ? "$" + item.unit_price.toFixed(2) : "—";
             html += `<tr>`;
             html += `<td>${item.id}</td>`;
             html += `<td style="font-weight:600">${item.name}</td>`;
             html += `<td>${item.quantity}</td>`;
-            html += `<td>$${item.unit_price.toFixed(2)}</td>`;
+            html += `<td>${price}</td>`;
             html += `</tr>`;
         }
         html += '</tbody></table>';
         return html;
     }
+
+    // ****************************************
+    // Row toggle for expanding order items
+    // (delegated so it survives table re-renders)
+    // ****************************************
+    $("#search_results").on("click", ".order-row", function () {
+        let idx = $(this).data("index");
+        $(this).toggleClass("expanded");
+        let detailRow = $(`#search_results .detail-row[data-index='${idx}']`);
+        if ($(this).hasClass("expanded")) {
+            detailRow.show();
+            detailRow.find(".detail-wrap").slideDown(200);
+        } else {
+            detailRow.find(".detail-wrap").slideUp(200, function () {
+                detailRow.hide();
+            });
+        }
+    });
 
     // ****************************************
     // Clear the order form
@@ -355,20 +374,20 @@ $(function () {
             update_result_count(res.length);
             flash_message("Success: " + res.length + " order(s) found");
 
-            // Bind row click to toggle detail
-            $("#search_results .order-row").click(function () {
-                let idx = $(this).data("index");
-                $(this).toggleClass("expanded");
-                let detailRow = $(`#search_results .detail-row[data-index='${idx}']`);
-                if ($(this).hasClass("expanded")) {
-                    detailRow.show();
-                    detailRow.find(".detail-wrap").slideDown(200);
-                } else {
-                    detailRow.find(".detail-wrap").slideUp(200, function () {
-                        detailRow.hide();
-                    });
-                }
-            });
+            // // Bind row click to toggle detail
+            // $("#search_results .order-row").click(function () {
+            //     let idx = $(this).data("index");
+            //     $(this).toggleClass("expanded");
+            //     let detailRow = $(`#search_results .detail-row[data-index='${idx}']`);
+            //     if ($(this).hasClass("expanded")) {
+            //         detailRow.show();
+            //         detailRow.find(".detail-wrap").slideDown(200);
+            //     } else {
+            //         detailRow.find(".detail-wrap").slideUp(200, function () {
+            //             detailRow.hide();
+            //         });
+            //     }
+            // });
 
             document.querySelector('.res-card').scrollIntoView({ behavior: 'smooth' });
         });
@@ -545,7 +564,7 @@ $(function () {
                 dataType: 'json',
                 success: function (data) {
                     flash_message("Item successfully deleted!");
-                    clear_form_data();
+                    clear_item_form_data();
                 },
                 error: function (xhr, status, error) {
                     flash_message(`Error deleting item: ${error}`);
