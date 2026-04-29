@@ -1,21 +1,10 @@
 apiVersion: triggers.tekton.dev/v1beta1
 kind: TriggerBinding
 metadata:
-  name: orders-master-push-binding
+  name: orders-binding
 spec:
   params:
     - name: git-repo-url
       value: $(body.repository.clone_url)
     - name: git-revision
-      value: $(body.after)
----
-apiVersion: triggers.tekton.dev/v1beta1
-kind: TriggerBinding
-metadata:
-  name: orders-master-pr-merge-binding
-spec:
-  params:
-    - name: git-repo-url
-      value: $(body.pull_request.base.repo.clone_url)
-    - name: git-revision
-      value: $(body.pull_request.merge_commit_sha)
+      value: $(body.head_commit.id)
