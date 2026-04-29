@@ -23,7 +23,7 @@ spec:
           - name: GIT_REF
             value: $(tt.params.git-revision)
           - name: BASE_URL
-            value: ""
+            value: "http://orders-divikapoor-dev.apps.rm2.thpm.p1.openshiftapps.com"
         workspaces:
           - name: pipeline-workspace
             persistentVolumeClaim:
