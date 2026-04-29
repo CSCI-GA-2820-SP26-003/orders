@@ -56,7 +56,7 @@ def step_impl(context: Any) -> None:
     """Make a call to the base URL"""
     context.driver.get(context.base_url)
     # Uncomment next line to take a screenshot of the web page
-    # save_screenshot(context, 'Home Page')
+    save_screenshot(context, 'Home Page')
 
 
 @then('I should see "{message}" in the title')
