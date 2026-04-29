@@ -144,6 +144,24 @@ $(function () {
     }
 
     // ****************************************
+    // Row toggle for expanding order items
+    // (delegated so it survives table re-renders)
+    // ****************************************
+    $("#search_results").on("click", ".order-row", function () {
+        let idx = $(this).data("index");
+        $(this).toggleClass("expanded");
+        let detailRow = $(`#search_results .detail-row[data-index='${idx}']`);
+        if ($(this).hasClass("expanded")) {
+            detailRow.show();
+            detailRow.find(".detail-wrap").slideDown(200);
+        } else {
+            detailRow.find(".detail-wrap").slideUp(200, function () {
+                detailRow.hide();
+            });
+        }
+    });
+
+    // ****************************************
     // Clear the order form
     // ****************************************
 
@@ -355,20 +373,20 @@ $(function () {
             update_result_count(res.length);
             flash_message("Success: " + res.length + " order(s) found");
 
-            // Bind row click to toggle detail
-            $("#search_results .order-row").click(function () {
-                let idx = $(this).data("index");
-                $(this).toggleClass("expanded");
-                let detailRow = $(`#search_results .detail-row[data-index='${idx}']`);
-                if ($(this).hasClass("expanded")) {
-                    detailRow.show();
-                    detailRow.find(".detail-wrap").slideDown(200);
-                } else {
-                    detailRow.find(".detail-wrap").slideUp(200, function () {
-                        detailRow.hide();
-                    });
-                }
-            });
+            // // Bind row click to toggle detail
+            // $("#search_results .order-row").click(function () {
+            //     let idx = $(this).data("index");
+            //     $(this).toggleClass("expanded");
+            //     let detailRow = $(`#search_results .detail-row[data-index='${idx}']`);
+            //     if ($(this).hasClass("expanded")) {
+            //         detailRow.show();
+            //         detailRow.find(".detail-wrap").slideDown(200);
+            //     } else {
+            //         detailRow.find(".detail-wrap").slideUp(200, function () {
+            //             detailRow.hide();
+            //         });
+            //     }
+            // });
 
             document.querySelector('.res-card').scrollIntoView({ behavior: 'smooth' });
         });
