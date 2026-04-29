@@ -7,10 +7,13 @@ spec:
     - description: The git repository URL to clone from
       name: GIT_REPO
       type: string
-    - description: The reference branch or ref
+    - default: master
+      description: The reference branch or ref
       name: GIT_REF
       type: string
-
+    - description: The external route URL of the deployed Orders service
+      name: BASE_URL
+      type: string
   tasks:
     - name: git-clone
       params:
@@ -102,5 +105,16 @@ spec:
         - name: source
           workspace: pipeline-workspace
 
+    - name: bdd
+      taskRef:
+        name: behave
+      runAfter:
+        - deploy-orders
+      params:
+        - name: BASE_URL
+          value: $(params.BASE_URL)
+      workspaces:
+        - name: source
+          workspace: pipeline-workspace
   workspaces:
     - name: pipeline-workspace

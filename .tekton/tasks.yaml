@@ -1,6 +1,41 @@
 apiVersion: tekton.dev/v1
 kind: Task
 metadata:
+  name: behave
+spec:
+  params:
+    - name: BASE_URL
+      description: The external route URL of the deployed Orders service
+      type: string
+  workspaces:
+    - name: source
+  steps:
+    - name: run-bdd-tests
+      image: python:3.12-slim
+      workingDir: $(workspaces.source.path)
+      env:
+        - name: BASE_URL
+          value: $(params.BASE_URL)
+      script: |
+        #!/bin/bash
+        set -e
+        apt-get update && apt-get install -y --no-install-recommends \
+          wget gnupg ca-certificates curl \
+          chromium chromium-driver
+        pip install --quiet pipenv
+        pipenv install --dev --system
+
+        echo "=== Verifying BASE_URL is reachable ==="
+        echo "BASE_URL: ${BASE_URL}"
+        curl -sL --max-time 10 "${BASE_URL}" | head -30 || echo "WARNING: curl to BASE_URL failed"
+
+        echo "=== Running Behave BDD tests ==="
+        behave
+
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
   name: pytest
 spec:
   workspaces:
