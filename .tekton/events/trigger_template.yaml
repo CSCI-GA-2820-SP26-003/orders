@@ -1,0 +1,30 @@
+apiVersion: triggers.tekton.dev/v1beta1
+kind: TriggerTemplate
+metadata:
+  name: orders-master-template
+spec:
+  params:
+    - name: git-repo-url
+    - name: git-revision
+    - name: base-url
+      default: ""
+  resourcetemplates:
+    - apiVersion: tekton.dev/v1
+      kind: PipelineRun
+      metadata:
+        generateName: orders-pipeline-run-
+      spec:
+        serviceAccountName: pipeline
+        pipelineRef:
+          name: orders-pipeline
+        params:
+          - name: GIT_REPO
+            value: $(tt.params.git-repo-url)
+          - name: GIT_REF
+            value: $(tt.params.git-revision)
+          - name: BASE_URL
+            value: $(tt.params.base-url)
+        workspaces:
+          - name: pipeline-workspace
+            persistentVolumeClaim:
+              claimName: pipeline-pvc
